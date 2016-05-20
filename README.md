@@ -7,4 +7,7 @@ To all C++ coders out there - if you can see any obvious efficiency gains that c
 
 ## Version History
 
+20.05.2016  **Version1.0.1 released**<br>
+20.05.2016  Fixed bug causing Q-matrix probabilities to sum to >1
+
 20.05.2016  **Version1.0.0 released**
