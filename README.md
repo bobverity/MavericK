@@ -7,4 +7,4 @@ To all C++ coders out there - if you can see any obvious efficiency gains that c
 
 ## Version History
 
-19.05.2016  **Version1.0.0 released**
+20.05.2016  **Version1.0.0 released**
