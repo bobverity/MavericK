@@ -111,7 +111,7 @@ void MCMCobject_noAdmixture::reset(bool reset_Qmatrix_running) {
         logQmatrix_ind_running = vector< vector<double> >(n, vector<double>(K,-log(double(K))));
     }
     
-    logQmatrix_ind = vector< vector<double> >(n, vector<double>(K));
+    logQmatrix_ind = vector< vector<double> >(n, vector<double>(K, log(double(0))));
     Qmatrix_ind = vector< vector<double> >(n, vector<double>(K));
     Qmatrix_pop = vector< vector<double> >(uniquePops.size(), vector<double>(K));
     
