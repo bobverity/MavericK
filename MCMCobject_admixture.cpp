@@ -123,7 +123,7 @@ void MCMCobject_admixture::reset(bool reset_Qmatrix_running) {
         logQmatrix_gene_running = vector< vector<double> >(geneCopies, vector<double>(K,-log(double(K))));
     }
     
-    logQmatrix_gene = vector< vector<double> >(geneCopies, vector<double>(K));
+    logQmatrix_gene = vector< vector<double> >(geneCopies, vector<double>(K, log(double(0))));
     Qmatrix_gene = vector< vector<double> >(geneCopies, vector<double>(K));
     Qmatrix_ind = vector< vector<double> >(n, vector<double>(K));
     Qmatrix_pop = vector< vector<double> >(uniquePops.size(), vector<double>(K));

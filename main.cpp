@@ -4,8 +4,12 @@
 //
 //  Created by Bob on 24/11/2015.
 //  Distributed under the MIT software licence - see Notes.c file for details
-//  
-// ######## SEE Notes.c FILE FOR DETAILS OF OVERALL PROGRAM STRUCTURE ########
+//
+//  MavericK is a program for carring out analysis of population structure using Bayesian mixture modelling. What separates MavericK from other similar programs (such as STRUCTURE) is the ability to estimate the evidence for K via thermodynamic integration. There are also some differences in terms of implementation of the core algorithm, and available inputs and outputs.
+//
+//  See the Notes.c file for details of overall program structure
+//
+// ---------------------------------------------------------------------------
 
 
 // include standard library header files
@@ -40,7 +44,7 @@ int main(int argc, const char * argv[])
     cout << "------------------------------------------\n";
     cout << "               MAVERICK\n";
     cout << "by Robert Verity and Richard A. Nichols\n";
-    cout << "         Version 1.0 (Sep 2015)\n";
+    cout << "      Version 1.0.1 (20 May 2016)\n";
     cout << "accessed " << ctime(&ctt);
     cout << "------------------------------------------\n\n";
     
@@ -90,7 +94,7 @@ int main(int argc, const char * argv[])
         globals.outputLog_fileStream << "------------------------------------------\n";
         globals.outputLog_fileStream << "               MAVERICK\n";
         globals.outputLog_fileStream << "by Robert Verity and Richard A. Nichols\n";
-        globals.outputLog_fileStream << "         Version 1.0 (Sep 2015)\n";
+        globals.outputLog_fileStream << "      Version 1.1.0 (20 May 2016)\n";
 		globals.outputLog_fileStream << "accessed " << ctime(&ctt);
         globals.outputLog_fileStream << "------------------------------------------\n\n";
         
