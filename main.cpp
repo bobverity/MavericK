@@ -44,7 +44,7 @@ int main(int argc, const char * argv[])
     cout << "------------------------------------------\n";
     cout << "               MAVERICK\n";
     cout << "by Robert Verity and Richard A. Nichols\n";
-    cout << "      Version 1.1.0 (20 May 2016)\n";
+    cout << "      Version 1.0.1 (20 May 2016)\n";
     cout << "accessed " << ctime(&ctt);
     cout << "------------------------------------------\n\n";
     
