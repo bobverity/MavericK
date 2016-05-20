@@ -4,8 +4,12 @@
 //
 //  Created by Bob on 24/11/2015.
 //  Distributed under the MIT software licence - see Notes.c file for details
-//  
-// ######## SEE Notes.c FILE FOR DETAILS OF OVERALL PROGRAM STRUCTURE ########
+//
+//  MavericK is a program for carring out analysis of population structure using Bayesian mixture modelling. What separates MavericK from other similar programs (such as STRUCTURE) is the ability to estimate the evidence for K via thermodynamic integration. There are also some differences in terms of implementation of the core algorithm, and available inputs and outputs.
+//
+//  See the Notes.c file for details of overall program structure
+//
+// ---------------------------------------------------------------------------
 
 
 // include standard library header files
