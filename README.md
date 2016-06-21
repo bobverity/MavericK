@@ -9,6 +9,8 @@ To all C++ coders out there - if you can see any obvious efficiency gains that c
 
 ## Version History
 
+21.06.2016  Added Metropolis-Hastings step to improve mixing under admixture model
+
 20.05.2016  **Version1.0.1 released**<br>
 20.05.2016  Fixed bug causing Q-matrix probabilities to sum to >1
 

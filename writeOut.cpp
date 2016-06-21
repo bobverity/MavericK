@@ -26,6 +26,79 @@ ofstream safe_ofstream(string fileName, bool writeToFile, ofstream &logFileStrea
 }
 
 //------------------------------------------------
+// initialise global objects with empty values
+void initialiseGlobals(globals &globals) {
+    
+    // create lookup table for log function
+    int Jmax = *max_element(begin(globals.J),end(globals.J));
+    globals.log_lookup = vector< vector<double> >(int(1e4),vector<double>(Jmax+1));
+    for (int i=0; i<int(1e4); i++) {
+        for (int j=0; j<(Jmax+1); j++) {
+            globals.log_lookup[i][j] = log(double(i+j*globals.lambda));
+        }
+    }
+    
+    // Qmatrices
+    globals.Qmatrix_gene = vector< vector< vector<double> > >(globals.Kmax-globals.Kmin+1);
+    globals.QmatrixError_gene = vector< vector< vector<double> > >(globals.Kmax-globals.Kmin+1);
+    globals.Qmatrix_ind = vector< vector< vector<double> > >(globals.Kmax-globals.Kmin+1);
+    globals.QmatrixError_ind = vector< vector< vector<double> > >(globals.Kmax-globals.Kmin+1);
+    globals.Qmatrix_pop = vector< vector< vector<double> > >(globals.Kmax-globals.Kmin+1);
+    globals.QmatrixError_pop = vector< vector< vector<double> > >(globals.Kmax-globals.Kmin+1);
+    
+    for (int Kindex=0; Kindex<(globals.Kmax-globals.Kmin+1); Kindex++) {
+        int K = globals.Kmin+Kindex;
+        globals.Qmatrix_gene[Kindex] = vector< vector<double> >(globals.geneCopies,vector<double>(K));
+        globals.QmatrixError_gene[Kindex] = vector< vector<double> >(globals.geneCopies,vector<double>(K));
+        globals.Qmatrix_ind[Kindex] = vector< vector<double> >(globals.n,vector<double>(K));
+        globals.QmatrixError_ind[Kindex] = vector< vector<double> >(globals.n,vector<double>(K));
+        globals.Qmatrix_pop[Kindex] = vector< vector<double> >(globals.uniquePops.size(),vector<double>(K));
+        globals.QmatrixError_pop[Kindex] = vector< vector<double> >(globals.uniquePops.size(),vector<double>(K));
+    }
+    
+    // evidence estimates
+    vector<double> nanVec = vector<double>(globals.Kmax-globals.Kmin+1,-sqrt(-1.0));
+    globals.logEvidence_exhaustive = nanVec;
+    
+    globals.logEvidence_harmonic = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.mainRepeats));
+    globals.logEvidence_harmonic_grandMean = nanVec;
+    globals.logEvidence_harmonic_grandSE = nanVec;
+    
+    globals.structure_loglike_mean = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.mainRepeats));
+    globals.structure_loglike_var = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.mainRepeats));
+    globals.logEvidence_structure = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.mainRepeats));
+    globals.logEvidence_structure_grandMean = nanVec;
+    globals.logEvidence_structure_grandSE = nanVec;
+    
+    globals.TIpoint_mean = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.thermodynamicRungs,-sqrt(-1.0)));
+    globals.TIpoint_var = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.thermodynamicRungs,-sqrt(-1.0)));
+    globals.TIpoint_SE = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.thermodynamicRungs,-sqrt(-1.0)));
+    globals.logEvidence_TI = nanVec;
+    globals.logEvidence_TI_SE = nanVec;
+    
+    globals.posterior_exhaustive = nanVec;
+    globals.posterior_harmonic_mean = nanVec;
+    globals.posterior_harmonic_LL = nanVec;
+    globals.posterior_harmonic_UL = nanVec;
+    globals.posterior_structure_mean = nanVec;
+    globals.posterior_structure_LL = nanVec;
+    globals.posterior_structure_UL = nanVec;
+    globals.posterior_TI_mean = nanVec;
+    globals.posterior_TI_LL = nanVec;
+    globals.posterior_TI_UL = nanVec;
+    
+    globals.AIC = nanVec;
+    globals.BIC = nanVec;
+    globals.DIC_Gelman = nanVec;
+    globals.DIC_Spiegelhalter = nanVec;
+    
+    globals.L_1 = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.mainRepeats));
+    globals.L_2 = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.mainRepeats));
+    globals.delta_K = vector<double>(globals.Kmax-globals.Kmin+1);
+    
+}
+
+//------------------------------------------------
 // open file streams that are common to all K
 void openFileStreams(globals &globals) {
     

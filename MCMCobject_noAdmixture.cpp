@@ -33,18 +33,11 @@ MCMCobject_noAdmixture::MCMCobject_noAdmixture(globals &globals, int _Kindex, in
     beta = _beta;
     uniquePops = globals.uniquePops;
     
-    // create lookup table for log function
-    int Jmax = *max_element(begin(J),end(J));
-    log_lookup = vector< vector<double> >(int(1e4),vector<double>(Jmax+1));
-    for (int i=0; i<int(1e4); i++) {
-        for (int j=0; j<(Jmax+1); j++) {
-            log_lookup[i][j] = log(double(i+j*lambda));
-        }
-    }
-    
     burnin = _burnin;
     samples = _samples;
     thinning = _thinning;
+    
+    log_lookup = globals.log_lookup;
     
     group = vector<int>(n,1);
     

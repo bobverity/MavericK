@@ -54,6 +54,7 @@ public:
     std::vector< std::vector<double> > log_lookup;
     
     std::vector<int> linearGroup;
+    std::vector< std::vector< std::vector<int> > > group;
     int groupIndex;
     std::vector< std::vector< std::vector<int> > > alleleCounts;
     std::vector< std::vector<int> > alleleCountsTotals;
@@ -78,6 +79,7 @@ public:
     
     std::vector<double> logProbVec;
     double logProbVecSum;
+    double logProbVecMax;
     std::vector<double> probVec;
     double probVecSum;
     
@@ -113,6 +115,8 @@ public:
     
     // update objects
     void group_update();
+    void group_update_indLevel();
+    void group_update_indLevel2();
     void drawFreqs();
     void alpha_update();
     
@@ -123,6 +127,7 @@ public:
     void storeQmatrix();
     
     // likelihoods
+    void d_logLikeConditional(int i, int k, int targetGroup);
     void d_logLikeGroup();
     void d_logLikeJoint();
     

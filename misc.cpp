@@ -25,6 +25,11 @@ using namespace std;
 //------------------------------------------------
 // add two numbers together in log space. One number (but not both) is allowed to be -inf.
 double logSum(double logA, double logB) {
+    if (logA-logB > 100) {
+        return(logA);
+    } else if (logB-logA > 100) {
+        return(logB);
+    }
     double output = (logA<logB) ? logB + log(1+exp(logA-logB)) : logA + log(1+exp(logB-logA));
     return(output);
 }
