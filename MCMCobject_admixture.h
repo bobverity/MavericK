@@ -116,7 +116,6 @@ public:
     // update objects
     void group_update();
     void group_update_indLevel();
-    void group_update_indLevel2();
     void drawFreqs();
     void alpha_update();
     

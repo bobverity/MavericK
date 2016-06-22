@@ -9,6 +9,7 @@ To all C++ coders out there - if you can see any obvious efficiency gains that c
 
 ## Version History
 
+22.06.2016  **Version1.0.2 released**<br>
 21.06.2016  Added Metropolis-Hastings step to improve mixing under admixture model
 
 20.05.2016  **Version1.0.1 released**<br>
