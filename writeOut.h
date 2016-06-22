@@ -19,6 +19,14 @@
 #include "OSfunctions.h"
 
 //------------------------------------------------
+// safely open output file stream, otherwise error. Option to write errors to file if writeErrorToFile is true.
+std::ofstream safe_ofstream(std::string fileName, bool writeToFile, std::ofstream &logFileStream);
+
+//------------------------------------------------
+// initialise global objects with empty values
+void initialiseGlobals(globals &globals);
+
+//------------------------------------------------
 // open file streams that are common to all K
 void openFileStreams(globals &globals);
 

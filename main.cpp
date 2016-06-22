@@ -10,7 +10,23 @@
 //  See the Notes.c file for details of overall program structure
 //
 // ---------------------------------------------------------------------------
-
+/*
+ 
+ Ideas for how to speed up and reorganise program:
+ 
+ - make lookup tables global
+ - make chain object inside of MCMC
+ - data and groupings start from index 0
+ - think about listing order of e.g. alleleCounts[k][l][j]. Could this order be rearranged to make faster inside likelihood calculation?
+ - metropolis coupling
+ - fancy mixture modelling techniques, such as linking over K
+ - do I need alleleCountsTotals at all?
+ - sample1 function designed to choose best K first
+ - currently I am temporarily adding and subtracting elements when calculating likelihood, then adding again once K chosen. Avoid add-subtract-add step if K does not change
+ - get rid of linearGroup
+ - replace logSum with underflow method in Q-matrix calculation
+ 
+*/
 
 // include standard library header files
 #include <iostream>
@@ -44,7 +60,7 @@ int main(int argc, const char * argv[])
     cout << "------------------------------------------\n";
     cout << "               MAVERICK\n";
     cout << "by Robert Verity and Richard A. Nichols\n";
-    cout << "      Version 1.0.1 (20 May 2016)\n";
+    cout << "      Version 1.0.2 (22 June 2016)\n";
     cout << "accessed " << ctime(&ctt);
     cout << "------------------------------------------\n\n";
     
@@ -94,7 +110,7 @@ int main(int argc, const char * argv[])
         globals.outputLog_fileStream << "------------------------------------------\n";
         globals.outputLog_fileStream << "               MAVERICK\n";
         globals.outputLog_fileStream << "by Robert Verity and Richard A. Nichols\n";
-        globals.outputLog_fileStream << "      Version 1.1.0 (20 May 2016)\n";
+        globals.outputLog_fileStream << "      Version 1.0.2 (22 June 2016)\n";
 		globals.outputLog_fileStream << "accessed " << ctime(&ctt);
         globals.outputLog_fileStream << "------------------------------------------\n\n";
         
@@ -132,62 +148,7 @@ int main(int argc, const char * argv[])
     // Perform inference. Loop through defined range of K, deploying various statistical methods.
     
     // initialise objects for storing results
-    // Qmatrices
-    globals.Qmatrix_gene = vector< vector< vector<double> > >(globals.Kmax-globals.Kmin+1);
-    globals.QmatrixError_gene = vector< vector< vector<double> > >(globals.Kmax-globals.Kmin+1);
-    globals.Qmatrix_ind = vector< vector< vector<double> > >(globals.Kmax-globals.Kmin+1);
-    globals.QmatrixError_ind = vector< vector< vector<double> > >(globals.Kmax-globals.Kmin+1);
-    globals.Qmatrix_pop = vector< vector< vector<double> > >(globals.Kmax-globals.Kmin+1);
-    globals.QmatrixError_pop = vector< vector< vector<double> > >(globals.Kmax-globals.Kmin+1);
-    for (int Kindex=0; Kindex<(globals.Kmax-globals.Kmin+1); Kindex++) {
-        int K = globals.Kmin+Kindex;
-        globals.Qmatrix_gene[Kindex] = vector< vector<double> >(globals.geneCopies,vector<double>(K));
-        globals.QmatrixError_gene[Kindex] = vector< vector<double> >(globals.geneCopies,vector<double>(K));
-        globals.Qmatrix_ind[Kindex] = vector< vector<double> >(globals.n,vector<double>(K));
-        globals.QmatrixError_ind[Kindex] = vector< vector<double> >(globals.n,vector<double>(K));
-        globals.Qmatrix_pop[Kindex] = vector< vector<double> >(globals.uniquePops.size(),vector<double>(K));
-        globals.QmatrixError_pop[Kindex] = vector< vector<double> >(globals.uniquePops.size(),vector<double>(K));
-    }
-    
-    // evidence estimates
-    vector<double> nanVec = vector<double>(globals.Kmax-globals.Kmin+1,-sqrt(-1.0));
-    globals.logEvidence_exhaustive = nanVec;
-    
-    globals.logEvidence_harmonic = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.mainRepeats));
-    globals.logEvidence_harmonic_grandMean = nanVec;
-    globals.logEvidence_harmonic_grandSE = nanVec;
-    
-    globals.structure_loglike_mean = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.mainRepeats));
-    globals.structure_loglike_var = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.mainRepeats));
-    globals.logEvidence_structure = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.mainRepeats));
-    globals.logEvidence_structure_grandMean = nanVec;
-    globals.logEvidence_structure_grandSE = nanVec;
-    
-    globals.TIpoint_mean = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.thermodynamicRungs,-sqrt(-1.0)));
-    globals.TIpoint_var = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.thermodynamicRungs,-sqrt(-1.0)));
-    globals.TIpoint_SE = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.thermodynamicRungs,-sqrt(-1.0)));
-    globals.logEvidence_TI = nanVec;
-    globals.logEvidence_TI_SE = nanVec;
-    
-    globals.posterior_exhaustive = nanVec;
-    globals.posterior_harmonic_mean = nanVec;
-    globals.posterior_harmonic_LL = nanVec;
-    globals.posterior_harmonic_UL = nanVec;
-    globals.posterior_structure_mean = nanVec;
-    globals.posterior_structure_LL = nanVec;
-    globals.posterior_structure_UL = nanVec;
-    globals.posterior_TI_mean = nanVec;
-    globals.posterior_TI_LL = nanVec;
-    globals.posterior_TI_UL = nanVec;
-    
-    globals.AIC = nanVec;
-    globals.BIC = nanVec;
-    globals.DIC_Gelman = nanVec;
-    globals.DIC_Spiegelhalter = nanVec;
-    
-    globals.L_1 = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.mainRepeats));
-    globals.L_2 = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.mainRepeats));
-    globals.delta_K = vector<double>(globals.Kmax-globals.Kmin+1);
+    initialiseGlobals(globals);
     
     // open file streams that are common to all K
     openFileStreams(globals);

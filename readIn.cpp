@@ -1045,7 +1045,7 @@ void readData(globals &globals) {
     alleles << "}\n";
     coutAndLog(alleles.str(), globals.outputLog_on, globals.outputLog_fileStream);
     
-    coutAndLog("  missing observations = "+to_string((long long)missingDataCount)+string(" of ")+to_string((long long)sum(globals.ploidy_vec)*globals.loci)+string("\n\n"), globals.outputLog_on, globals.outputLog_fileStream);
+    coutAndLog("  missing observations = "+to_string((long long)missingDataCount)+string(" of ")+to_string((long long)sum(globals.ploidy_vec)*globals.loci)+string("\n\n"), globals.outputLog_on, globals.outputLog_fileStream);    
     
 }
 

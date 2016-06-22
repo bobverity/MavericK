@@ -43,16 +43,16 @@ MCMCobject_admixture::MCMCobject_admixture(globals &globals, int _Kindex, int _b
     samples = _samples;
     thinning = _thinning;
     
-    // create lookup table for log function
-    int Jmax = *max_element(begin(J),end(J));
-    log_lookup = vector< vector<double> >(int(1e3),vector<double>(Jmax+1));
-    for (int i=0; i<int(1e3); i++) {
-        for (int j=0; j<(Jmax+1); j++) {
-            log_lookup[i][j] = log(double(i+j*lambda));
-        }
-    }
+    log_lookup = globals.log_lookup;
     
     linearGroup = vector<int>(geneCopies);
+    group = vector< vector< vector<int> > >(n);
+    for (unsigned int ind=0; ind<n; ind++) {
+        group[ind] = vector< vector<int> >(loci);
+        for (unsigned int l=0; l<loci; l++) {
+            group[ind][l] = vector<int>(ploidy_vec[ind]);
+        }
+    }
     
     // initialise allele counts and frequencies
     alleleCounts = vector< vector< vector<int> > >(K);
@@ -73,10 +73,12 @@ MCMCobject_admixture::MCMCobject_admixture(globals &globals, int _Kindex, int _b
     admixCountsTotals = vector<int>(n);
     admixFreqs = vector< vector<double> >(n,vector<double>(K));
     
-    // initialise probabilities
+    // initialise objects for calculating assignment probabilities
     logProbVec = vector<double>(K);
-    logProbVecSum = 0;
+    logProbVecSum = 0;  // (used in Qmatrix calculation)
+    logProbVecMax = 0;
     probVec = vector<double>(K);
+    probVecSum = 0;
     
     // initialise Qmatrices
     logQmatrix_gene_old = vector< vector<double> >(geneCopies, vector<double>(K));
@@ -136,6 +138,7 @@ void MCMCobject_admixture::reset(bool reset_Qmatrix_running) {
             for (int p=0; p<ploidy_vec[i]; p++) {
                 groupIndex++;
                 linearGroup[groupIndex] = sample1(equalK,1.0);
+                group[i][l][p] = linearGroup[groupIndex];
             }
         }
     }
@@ -181,8 +184,11 @@ void MCMCobject_admixture::perform_MCMC(globals &globals, bool drawAlleleFreqs, 
         // thinning loop (becomes active after burn-in)
         for (int thin=0; thin<thinSwitch; thin++) {
             
-            // update group allocation of all individuals
+            // update group allocation at the gene copy level
             group_update();
+            
+            // update group allocation at individual level. Improves mixing when alpha very small.
+            group_update_indLevel();
             
             // if alpha not fixed update by Metropolis step
             if (globals.fixAlpha_on==0)
@@ -313,7 +319,7 @@ void MCMCobject_admixture::perform_MCMC(globals &globals, bool drawAlleleFreqs, 
 
 //------------------------------------------------
 // MCMCobject_admixture::
-// resample group allocation of all individuals by drawing from conditional posterior
+// resample group allocation of all gene copies by drawing from conditional posterior
 void MCMCobject_admixture::group_update() {
     
     // update group allocation for this gene copy
@@ -349,6 +355,7 @@ void MCMCobject_admixture::group_update() {
                 
                 // resample grouping
                 linearGroup[groupIndex] = sample1(probVec, probVecSum);
+                group[ind][l][p] = linearGroup[groupIndex];
                 
                 // add this gene copy to allele counts and admix counts
                 if (data[ind][l][p]!=0) {   // if not missing data
@@ -363,6 +370,156 @@ void MCMCobject_admixture::group_update() {
     } // ind
     
 }
+
+//------------------------------------------------
+// MCMCobject_admixture::
+// Metropolis-Hastings step to update all gene copies within an individual simultaneously. This helps with mixing when alpha is small, as otherwise it can be very difficult for an individual allocated to the wrong group to move freely.
+void MCMCobject_admixture::group_update_indLevel() {
+    
+    double logLike_old;
+    double logLike_new;
+    double propose_logProb_old;
+    double propose_logProb_new;
+    double MH_diff;
+    double rand1;
+    int d;
+    int thisGroup;
+    vector< vector<double> > newGroup(loci);
+    
+    // loop over all individuals
+    groupIndex=-1;
+    for (int ind=0; ind<n; ind++) {
+        
+        // subtract all gene copies in this individual and calculate likelihood of current grouping at the same time
+        logLike_old = 0;
+        propose_logProb_old = 0;
+        for (unsigned int l=0; l<loci; l++) {
+            for (unsigned int p=0; p<ploidy_vec[ind]; p++) {
+                d = data[ind][l][p];
+                
+                // subtract this gene copy from allele counts and admix counts
+                if (d!=0) {   // if not missing data
+                    thisGroup = group[ind][l][p];
+                    alleleCounts[thisGroup-1][l][d-1]--;
+                    alleleCountsTotals[thisGroup-1][l]--;
+                    
+                    admixCounts[ind][thisGroup-1]--;
+                    admixCountsTotals[ind]--;
+                }
+                
+                // calculate probability of this gene copy from all demes
+                probVecSum = 0;
+                for (unsigned int k=0; k<K; k++) {
+                    if (d==0) {
+                        probVec[k] = 1.0;
+                    } else {
+                        probVec[k] = double(alleleCounts[k][l][d-1]+lambda)/double(alleleCountsTotals[k][l]+J[l]*lambda);
+                        if (beta!=1.0) {
+                            probVec[k] = pow(probVec[k],beta);
+                        }
+                    }
+                    probVec[k] *= double(admixCounts[ind][k]+alpha);  // (denominator of this expression is the same for all k, so is omitted)
+                    probVecSum += probVec[k];
+                }
+                
+                // calculate probability of chosen grouping
+                propose_logProb_old += log(probVec[group[ind][l][p]-1]/probVecSum);
+                logLike_old += log(probVec[group[ind][l][p]-1]);
+                
+            }
+        }
+        
+        // propose a new grouping and calculate likelihood
+        logLike_new = 0;
+        propose_logProb_new = 0;
+        for (unsigned int l=0; l<loci; l++) {
+            newGroup[l] = vector<double>(ploidy_vec[ind]);
+            for (unsigned int p=0; p<ploidy_vec[ind]; p++) {
+                d = data[ind][l][p];
+                
+                // calculate probability of this gene copy from all demes
+                probVecSum = 0;
+                for (unsigned int k=0; k<K; k++) {
+                    if (d==0) {
+                        probVec[k] = 1.0;
+                    } else {
+                        probVec[k] = double(alleleCounts[k][l][d-1]+lambda)/double(alleleCountsTotals[k][l]+J[l]*lambda);
+                        if (beta!=1.0) {
+                            probVec[k] = pow(probVec[k],beta);
+                        }
+                    }
+                    probVec[k] *= double(admixCounts[ind][k]+alpha);  // (denominator of this expression is the same for all k, so is omitted)
+                    probVecSum += probVec[k];
+                }
+                
+                // resample grouping
+                newGroup[l][p] = sample1(probVec, probVecSum);
+                
+                // calculate probability of new grouping
+                propose_logProb_new += log(probVec[newGroup[l][p]-1]/probVecSum);
+                logLike_new += log(probVec[newGroup[l][p]-1]);
+                
+                // add this gene copy to allele counts and admix counts
+                if (d!=0) {   // if not missing data
+                    thisGroup = newGroup[l][p];
+                    alleleCounts[thisGroup-1][l][d-1]++;
+                    alleleCountsTotals[thisGroup-1][l]++;
+                    
+                    admixCounts[ind][thisGroup-1]++;
+                    admixCountsTotals[ind]++;
+                }
+            }
+        }
+        
+        // Metropolis-Hastings step. If accept then stick with new grouping, otherwise revert back
+        MH_diff = (logLike_new - propose_logProb_new) - (logLike_old - propose_logProb_old);
+        rand1 = runif1(0,1);
+        if (log(rand1)<MH_diff) {
+            
+            // accept move
+            for (unsigned int l=0; l<loci; l++) {
+                for (unsigned int p=0; p<ploidy_vec[ind]; p++) {
+                    groupIndex++;
+                    linearGroup[groupIndex] = newGroup[l][p];
+                    group[ind][l][p] = newGroup[l][p];
+                }
+            }
+            
+        } else {
+            
+            // reject move
+            for (unsigned int l=0; l<loci; l++) {
+                for (unsigned int p=0; p<ploidy_vec[ind]; p++) {
+                    groupIndex++;
+                    d = data[ind][l][p];
+                    if (d!=0) {   // if not missing data
+                        
+                        // subtract new group
+                        thisGroup = newGroup[l][p];
+                        alleleCounts[thisGroup-1][l][d-1]--;
+                        alleleCountsTotals[thisGroup-1][l]--;
+                        
+                        admixCounts[ind][thisGroup-1]--;
+                        admixCountsTotals[ind]--;
+                        
+                        // reinstate old group
+                        thisGroup = group[ind][l][p];
+                        alleleCounts[thisGroup-1][l][d-1]++;
+                        alleleCountsTotals[thisGroup-1][l]++;
+                        
+                        admixCounts[ind][thisGroup-1]++;
+                        admixCountsTotals[ind]++;
+                    }
+                    
+                }
+            }
+            
+        }
+        
+    }   // end loop over individuals
+    
+}
+
 
 //------------------------------------------------
 // MCMCobject_admixture::
@@ -423,7 +580,7 @@ void MCMCobject_admixture::alpha_update() {
     
     // don't let alpha_new equal exactly 0 (to avoid nan values)
     if (alpha_new==0) {
-        alpha_new = pow(10.0,-300.0);
+        alpha_new = UNDERFLO;
     }
     
     // calculate likelihood under old and new alpha values. Likelihood only derives from admixture proportions - not allele freqencies
@@ -473,9 +630,15 @@ void MCMCobject_admixture::chooseBestLabelPermutation(globals &globals, int rep)
     // swap labels if necessary
     if (performSwap) {
         
-        // update grouping to reflect swapped labels
-        for (int i=0; i<geneCopies; i++) {
-            linearGroup[i] = bestPerm[linearGroup[i]-1]+1;
+        groupIndex=-1;
+        for (int ind=0; ind<n; ind++) {
+            for (int l=0; l<loci; l++) {
+                for (int p=0; p<ploidy_vec[ind]; p++) {
+                    groupIndex++;
+                    linearGroup[groupIndex] = bestPerm[linearGroup[groupIndex]-1]+1;
+                    group[ind][l][p] = linearGroup[groupIndex];
+                }
+            }
         }
         
         // update allele counts to reflect swapped labels
@@ -570,6 +733,40 @@ void MCMCobject_admixture::storeQmatrix() {
         }
     }
     
+}
+
+//------------------------------------------------
+// MCMCobject_admixture::
+// conditional probability of ith individual from kth deme (output in log space). Only considers groupings currently equal to targetGroup.
+void MCMCobject_admixture::d_logLikeConditional(int i, int k, int targetGroup) {
+    
+    /*
+    // calculate conditional probability of data
+    logProbVec[k] = 0;
+    int d, a, a_t;  // for making temporary copies of data, alleleCounts, and alleleCountsTotals respectively
+    for (unsigned int l=0; l<loci; l++) {
+        a_t = alleleCountsTotals[k][l];
+        for (unsigned int p=0; p<ploidy_vec[i]; p++) {
+            d = data[i][l][p];
+            a = alleleCounts[k][l][d-1];
+            if (d!=0 && group[i][l][p]==targetGroup) {  // if data not missing AND group equal to targetGroup
+                if ((a<int(1e4)) && (a_t<int(1e4))) {
+                    logProbVec[k] += log_lookup[a][1]-log_lookup[a_t][J[l]];
+                } else {
+                    logProbVec[k] += log((a + lambda)/double(a_t + J[l]*lambda));
+                }
+                alleleCounts[k][l][d-1] ++;
+                a_t ++;
+            }
+        }
+        for (unsigned int p=0; p<ploidy_vec[i]; p++) {
+            d = data[i][l][p];
+            if (d!=0 && group[i][l][p]==targetGroup) {
+                alleleCounts[k][l][d-1] --;
+            }
+        }
+    }
+    */
 }
 
 //------------------------------------------------
