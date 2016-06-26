@@ -14,8 +14,11 @@
  
  Ideas for how to speed up and reorganise program:
  
- - make lookup tables global
+ - equal sample function
  - make chain object inside of MCMC
+ - choose rung positions adaptively
+ - Robbins-Monro update of alpha proposal standard deviation
+ - move to gamma prior on alpha
  - data and groupings start from index 0
  - think about listing order of e.g. alleleCounts[k][l][j]. Could this order be rearranged to make faster inside likelihood calculation?
  - metropolis coupling
@@ -24,7 +27,7 @@
  - sample1 function designed to choose best K first
  - currently I am temporarily adding and subtracting elements when calculating likelihood, then adding again once K chosen. Avoid add-subtract-add step if K does not change
  - get rid of linearGroup
- - replace logSum with underflow method in Q-matrix calculation
+ - replace logSum with underflow method in Q-matrix calculation?
  
 */
 
@@ -37,19 +40,20 @@
 #include "exhaustive.h"
 #include "globals.h"
 #include "Hungarian.h"
-#include "mainMCMC.h"
 #include "MCMCobject_admixture.h"
-#include "MCMCobject_noAdmixture.h"
 #include "misc.h"
-#include "MCMCobject_noAdmixture.h"
 #include "OSfunctions.h"
 #include "probability.h"
+#include "run_main_MCMC.h"
+#include "run_TI_MCMC.h"
 #include "readIn.h"
-#include "TI.h"
 #include "writeOut.h"
 
 using namespace std;
 
+// create global objects
+vector< vector<double> > log_lookup;
+vector<double> log_lookup_0;
 
 // main function
 int main(int argc, const char * argv[])
@@ -135,10 +139,21 @@ int main(int argc, const char * argv[])
     
     //---------------------------------------------------------------------------------------------------
     
-    // Read in data file. Ensure that data is formatted correctly, and that the chosen combination of data and parameters makes sense.
+    // Read in data file. Ensure that data is formatted correctly, and that the chosen combination of data and parameters makes sense. Define lookup tables.
     
     // read in data and check format
     readData(globals);
+    
+    // create lookup table for log(i+(j+1)*lambda) function. The object log_lookup_0 does the same thing for the first element only (it is slightly faster to index this vector rather than the first element of an array).
+    int Jmax = *max_element(begin(globals.J),end(globals.J));
+    log_lookup = vector< vector<double> >(int(1e4),vector<double>(Jmax+1));
+    log_lookup_0 = vector<double>(int(1e4));
+    for (int i=0; i<int(1e4); i++) {
+        for (int j=0; j<Jmax; j++) {
+            log_lookup[i][j] = log(double(i+(j+1)*globals.lambda));
+        }
+        log_lookup_0[i] = log_lookup[i][0];
+    }
     
     // check that chosen options make sense
     checkOptions(globals);
@@ -154,7 +169,7 @@ int main(int argc, const char * argv[])
     openFileStreams(globals);
     
     // open file stream for junk output (comment out as needed)
-    //globals.junk_fileStream = safe_ofstream(globals.outputRoot_filePath + "junk.txt", false, globals.outputLog_fileStream);
+    globals.junk_fileStream = safe_ofstream(globals.outputRoot_filePath + "junk.txt", false, globals.outputLog_fileStream);
     
     
     // loop through range of K
@@ -176,20 +191,11 @@ int main(int argc, const char * argv[])
             coutAndLog("  complete\n\n", globals.outputLog_on, globals.outputLog_fileStream);
         }
         
-        // ordinary MCMC - repeat multiple times
-        coutAndLog("Running ordinary MCMC...\n", globals.outputLog_on, globals.outputLog_fileStream);
-        if (!globals.admix_on) {
-            mainMCMC_noAdmixture(globals, Kindex);
-        } else {
-            mainMCMC_admixture(globals, Kindex);
-        }
-        coutAndLog("  complete\n\n", globals.outputLog_on, globals.outputLog_fileStream);
-        
-        // thermodynamic integration
+        // main MCMC, including thermodynamic integration
         if (globals.thermodynamic_on) {
             coutAndLog("Carrying out thermodynamic integration...\n", globals.outputLog_on, globals.outputLog_fileStream);
             if (!globals.admix_on) {
-                TI_noAdmixture(globals, Kindex);
+                run_TI_MCMC_noAdmixture(globals, Kindex);
             } else {
                 TI_admixture(globals, Kindex);
             }

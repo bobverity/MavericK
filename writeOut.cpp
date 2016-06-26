@@ -29,15 +29,6 @@ ofstream safe_ofstream(string fileName, bool writeToFile, ofstream &logFileStrea
 // initialise global objects with empty values
 void initialiseGlobals(globals &globals) {
     
-    // create lookup table for log function
-    int Jmax = *max_element(begin(globals.J),end(globals.J));
-    globals.log_lookup = vector< vector<double> >(int(1e4),vector<double>(Jmax+1));
-    for (int i=0; i<int(1e4); i++) {
-        for (int j=0; j<(Jmax+1); j++) {
-            globals.log_lookup[i][j] = log(double(i+j*globals.lambda));
-        }
-    }
-    
     // Qmatrices
     globals.Qmatrix_gene = vector< vector< vector<double> > >(globals.Kmax-globals.Kmin+1);
     globals.QmatrixError_gene = vector< vector< vector<double> > >(globals.Kmax-globals.Kmin+1);

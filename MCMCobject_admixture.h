@@ -51,8 +51,6 @@ public:
     int samples;
     int thinning;
     
-    std::vector< std::vector<double> > log_lookup;
-    
     std::vector<int> linearGroup;
     std::vector< std::vector< std::vector<int> > > group;
     int groupIndex;
@@ -126,7 +124,6 @@ public:
     void storeQmatrix();
     
     // likelihoods
-    void d_logLikeConditional(int i, int k, int targetGroup);
     void d_logLikeGroup();
     void d_logLikeJoint();
     

@@ -34,7 +34,7 @@ double rgamma1(double shape, double rate) {
 
 	// check for zero or infinite values (catches bug present in Visual Studio 2010)
 	if (x==0)
-		x = pow(10.0,-300.0);
+		x = UNDERFLO;
 	while ((1.0/x)==0)
 		x = rgamma(generator);
 

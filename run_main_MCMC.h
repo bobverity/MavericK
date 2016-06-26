@@ -1,6 +1,6 @@
 //
 //  MavericK
-//  mainMCMC.h
+//  run_main_MCMC.h
 //
 //  Created: Bob on 23/10/2015
 //
@@ -10,22 +10,22 @@
 //
 // ---------------------------------------------------------------------------
 
-#ifndef __Maverick1_0__mainMCMC__
-#define __Maverick1_0__mainMCMC__
+#ifndef __Maverick1_0__run_main_MCMC__
+#define __Maverick1_0__run_main_MCMC__
 
 #include <iostream>
 #include "globals.h"
 #include "probability.h"
 #include "misc.h"
-#include "MCMCobject_noAdmixture.h"
 #include "MCMCobject_admixture.h"
+#include "MCMC_main_noAdmixture.h"
 
 //------------------------------------------------
-// main Structure MCMC under no-admixture model, repeated multiple times
-void mainMCMC_noAdmixture(globals &globals, int Kindex);
+// main MCMC under no-admixture model, repeated multiple times
+void run_main_MCMC_noAdmixture(globals &globals, int Kindex);
 
 //------------------------------------------------
-// main Structure MCMC under admixture model, repeated multiple times
+// main MCMC under admixture model, repeated multiple times
 void mainMCMC_admixture(globals &globals, int Kindex);
 
 

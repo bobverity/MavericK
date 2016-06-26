@@ -14,10 +14,11 @@
 #define __Maverick1_0__probability__
 
 #include <random>
+#include "misc.h"
 
 //------------------------------------------------
 // draw from uniform(a,b) distribution
-double runif1(double a, double b);
+double runif1(double a=0, double b=1);
 
 //------------------------------------------------
 // draw from gamma(shape,rate) distribution

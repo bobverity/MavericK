@@ -167,9 +167,6 @@ public:
     std::vector< std::vector<std::string> > uniqueAlleles;
     int geneCopies;
     
-    // log lookup table
-    std::vector< std::vector<double> > log_lookup;
-    
     // objects for storing results
     std::vector< std::vector< std::vector<double> > > Qmatrix_gene;
     std::vector< std::vector< std::vector<double> > > QmatrixError_gene;

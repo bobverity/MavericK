@@ -43,8 +43,6 @@ MCMCobject_admixture::MCMCobject_admixture(globals &globals, int _Kindex, int _b
     samples = _samples;
     thinning = _thinning;
     
-    log_lookup = globals.log_lookup;
-    
     linearGroup = vector<int>(geneCopies);
     group = vector< vector< vector<int> > >(n);
     for (unsigned int ind=0; ind<n; ind++) {
@@ -733,40 +731,6 @@ void MCMCobject_admixture::storeQmatrix() {
         }
     }
     
-}
-
-//------------------------------------------------
-// MCMCobject_admixture::
-// conditional probability of ith individual from kth deme (output in log space). Only considers groupings currently equal to targetGroup.
-void MCMCobject_admixture::d_logLikeConditional(int i, int k, int targetGroup) {
-    
-    /*
-    // calculate conditional probability of data
-    logProbVec[k] = 0;
-    int d, a, a_t;  // for making temporary copies of data, alleleCounts, and alleleCountsTotals respectively
-    for (unsigned int l=0; l<loci; l++) {
-        a_t = alleleCountsTotals[k][l];
-        for (unsigned int p=0; p<ploidy_vec[i]; p++) {
-            d = data[i][l][p];
-            a = alleleCounts[k][l][d-1];
-            if (d!=0 && group[i][l][p]==targetGroup) {  // if data not missing AND group equal to targetGroup
-                if ((a<int(1e4)) && (a_t<int(1e4))) {
-                    logProbVec[k] += log_lookup[a][1]-log_lookup[a_t][J[l]];
-                } else {
-                    logProbVec[k] += log((a + lambda)/double(a_t + J[l]*lambda));
-                }
-                alleleCounts[k][l][d-1] ++;
-                a_t ++;
-            }
-        }
-        for (unsigned int p=0; p<ploidy_vec[i]; p++) {
-            d = data[i][l][p];
-            if (d!=0 && group[i][l][p]==targetGroup) {
-                alleleCounts[k][l][d-1] --;
-            }
-        }
-    }
-    */
 }
 
 //------------------------------------------------

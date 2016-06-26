@@ -1,6 +1,6 @@
 //
 //  MavericK
-//  mainMCMC.cpp
+//  run_main_MCMC.cpp
 //
 //  Created: Bob on 23/10/2015
 //
@@ -10,13 +10,13 @@
 //
 // ---------------------------------------------------------------------------
 
-#include "mainMCMC.h"
+#include "run_main_MCMC.h"
 
 using namespace std;
 
 //------------------------------------------------
-// main Structure MCMC under no-admixture model, repeated multiple times
-void mainMCMC_noAdmixture(globals &globals, int Kindex) {
+// main MCMC under no-admixture model, repeated multiple times
+void run_main_MCMC_noAdmixture(globals &globals, int Kindex) {
     int K = globals.Kmin+Kindex;
     
     // define temporary Qmatrix objects for calculating mean and sd over mainRepeats
@@ -24,19 +24,17 @@ void mainMCMC_noAdmixture(globals &globals, int Kindex) {
     vector< vector< vector<double> > > Qmatrix_pop_allReps(globals.uniquePops.size(), vector< vector<double> >(K, vector<double>(globals.mainRepeats)));
     
     // define MCMC object
-    MCMCobject_noAdmixture mainMCMC(globals, Kindex, globals.mainBurnin, globals.mainSamples, globals.mainThinning, 1.0);
+    MCMC_main_noAdmixture mainMCMC(globals, Kindex, 2);
     
     // repeat analysis multiple times
     for (int mainRep=0; mainRep<globals.mainRepeats; mainRep++) {
+        
+        // report progress
         coutAndLog("  analysis "+to_string((long long)mainRep+1)+" of "+to_string((long long)globals.mainRepeats)+"\n", globals.outputLog_on, globals.outputLog_fileStream);
         
         // perform MCMC
-        if (mainRep==0) {
-            mainMCMC.reset(true);
-        } else {
-            mainMCMC.reset(false);
-        }
-        mainMCMC.perform_MCMC(globals, true, false, globals.fixLabels_on, globals.outputLikelihood_on, globals.outputPosteriorGrouping_on, mainRep);
+        mainMCMC.reset(mainRep==0);     // only reset running estimate of Q-matrix on first rep
+        mainMCMC.perform_MCMC(globals, true, globals.fixLabels_on, globals.outputLikelihood_on, globals.outputPosteriorGrouping_on, mainRep);
         
         // save Qmatrix values
         if (globals.fixLabels_on) {
