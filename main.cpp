@@ -10,27 +10,11 @@
 //  See the Notes.c file for details of overall program structure
 //
 // ---------------------------------------------------------------------------
-/*
- 
- Ideas for how to speed up and reorganise program:
- 
- - make lookup tables global
- - make chain object inside of MCMC
- - data and groupings start from index 0
- - think about listing order of e.g. alleleCounts[k][l][j]. Could this order be rearranged to make faster inside likelihood calculation?
- - metropolis coupling
- - fancy mixture modelling techniques, such as linking over K
- - do I need alleleCountsTotals at all?
- - sample1 function designed to choose best K first
- - currently I am temporarily adding and subtracting elements when calculating likelihood, then adding again once K chosen. Avoid add-subtract-add step if K does not change
- - get rid of linearGroup
- - replace logSum with underflow method in Q-matrix calculation
- 
-*/
 
 // include standard library header files
 #include <iostream>
-#include <ctime>
+//#include <ctime>
+#include <sys/time.h>
 
 // include MavericK header files
 #include "EM_algorithm.h"
@@ -65,7 +49,9 @@ int main(int argc, const char * argv[])
     cout << "------------------------------------------\n\n";
     
     // start timing program
-    clock_t start = clock();
+    struct timeval time_start, time_end;
+    double duration;
+    gettimeofday(&time_start, NULL);
     
     //---------------------------------------------------------------------------------------------------
     
@@ -311,7 +297,8 @@ int main(int argc, const char * argv[])
     
     
     // end program
-    double duration = (clock()-start)/double(CLOCKS_PER_SEC);
+    gettimeofday(&time_end, NULL);
+    duration = (time_end.tv_sec-time_start.tv_sec) + (time_end.tv_usec-time_start.tv_usec)/1e6;
     coutAndLog("Program completed in "+to_string((double long)duration)+string(" seconds\n"), globals.outputLog_on, globals.outputLog_fileStream);
     coutAndLog("Output written to: "+globals.outputRoot_filePath+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
     coutAndLog("------------------------------------------\n", globals.outputLog_on, globals.outputLog_fileStream);
