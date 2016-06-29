@@ -10,23 +10,6 @@
 //  See the Notes.c file for details of overall program structure
 //
 // ---------------------------------------------------------------------------
-/*
- 
- Ideas for how to speed up and reorganise program:
- 
- - make lookup tables global
- - make chain object inside of MCMC
- - data and groupings start from index 0
- - think about listing order of e.g. alleleCounts[k][l][j]. Could this order be rearranged to make faster inside likelihood calculation?
- - metropolis coupling
- - fancy mixture modelling techniques, such as linking over K
- - do I need alleleCountsTotals at all?
- - sample1 function designed to choose best K first
- - currently I am temporarily adding and subtracting elements when calculating likelihood, then adding again once K chosen. Avoid add-subtract-add step if K does not change
- - get rid of linearGroup
- - replace logSum with underflow method in Q-matrix calculation
- 
-*/
 
 // include standard library header files
 #include <iostream>
@@ -60,12 +43,13 @@ int main(int argc, const char * argv[])
     cout << "------------------------------------------\n";
     cout << "               MAVERICK\n";
     cout << "by Robert Verity and Richard A. Nichols\n";
-    cout << "      Version 1.0.2 (22 June 2016)\n";
+    cout << "      Version 1.0.3 (29 June 2016)\n";
     cout << "accessed " << ctime(&ctt);
     cout << "------------------------------------------\n\n";
-    
+
     // start timing program
-    clock_t start = clock();
+    time_t tstart, tend;
+    time(&tstart);
     
     //---------------------------------------------------------------------------------------------------
     
@@ -110,7 +94,7 @@ int main(int argc, const char * argv[])
         globals.outputLog_fileStream << "------------------------------------------\n";
         globals.outputLog_fileStream << "               MAVERICK\n";
         globals.outputLog_fileStream << "by Robert Verity and Richard A. Nichols\n";
-        globals.outputLog_fileStream << "      Version 1.0.2 (22 June 2016)\n";
+        globals.outputLog_fileStream << "      Version 1.0.3 (29 June 2016)\n";
 		globals.outputLog_fileStream << "accessed " << ctime(&ctt);
         globals.outputLog_fileStream << "------------------------------------------\n\n";
         
@@ -309,13 +293,21 @@ int main(int argc, const char * argv[])
     if (globals.outputEvidenceNormalised_on)
         printEvidenceNormalised(globals);
     
-    
     // end program
-    double duration = (clock()-start)/double(CLOCKS_PER_SEC);
-    coutAndLog("Program completed in "+to_string((double long)duration)+string(" seconds\n"), globals.outputLog_on, globals.outputLog_fileStream);
+	time(&tend);
+    int duration = difftime(tend, tstart);
+	ostringstream duration_ss;
+	duration_ss << "Program completed in approximately " << duration << " seconds\n";
+	string duration_s = duration_ss.str();
+
+	if (duration<0) {
+		coutAndLog("Program completed in less than 1 second\n", globals.outputLog_on, globals.outputLog_fileStream);
+	} else {
+		coutAndLog(duration_s, globals.outputLog_on, globals.outputLog_fileStream);
+	}
     coutAndLog("Output written to: "+globals.outputRoot_filePath+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
     coutAndLog("------------------------------------------\n", globals.outputLog_on, globals.outputLog_fileStream);
-    
+
     //pauseExit();
     return(0);
 }

@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 #include "Windows_functions.h"
-
+#ifdef _WIN32
 //------------------------------------------------
 // round a double to nearest integer
 int round(double x) {
@@ -187,3 +187,4 @@ double lgamma(double x) {
     double loggamma = (x - 0.5)*log(x) - x + halfLogTwoPi + series;
 	return loggamma;
 }
+#endif
