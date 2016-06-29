@@ -295,12 +295,15 @@ int main(int argc, const char * argv[])
     
     // end program
 	time(&tend);
-    double duration = difftime(tend, tstart);
+    int duration = difftime(tend, tstart);
+	ostringstream duration_ss;
+	duration_ss << "Program completed in approximately " << duration << " seconds\n";
+	string duration_s = duration_ss.str();
 
-	if (duration<1) {
+	if (duration<0) {
 		coutAndLog("Program completed in less than 1 second\n", globals.outputLog_on, globals.outputLog_fileStream);
 	} else {
-		coutAndLog("Program completed in approximately "+to_string((double long)duration)+string(" seconds\n"), globals.outputLog_on, globals.outputLog_fileStream);
+		coutAndLog(duration_s, globals.outputLog_on, globals.outputLog_fileStream);
 	}
     coutAndLog("Output written to: "+globals.outputRoot_filePath+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
     coutAndLog("------------------------------------------\n", globals.outputLog_on, globals.outputLog_fileStream);
