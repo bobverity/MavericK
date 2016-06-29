@@ -41,7 +41,6 @@ globals::globals() {
     outputEvidenceDetails_fileName = "outputEvidenceDetails.csv";
     outputPosteriorGrouping_fileName = "outputPosteriorGrouping.csv";
     outputComparisonStatistics_fileName = "outputComparisonStatistics.csv";
-    outputEvanno_fileName = "outputEvanno.csv";
     outputMaxLike_alleleFreqs_fileName = "outputMaxLike_alleleFreqs.csv";
     outputMaxLike_admixFreqs_fileName = "outputMaxLike_admixFreqs.csv";
     
@@ -61,7 +60,6 @@ globals::globals() {
     outputEvidenceNormalised_filePath = outputRoot_filePath + outputEvidenceNormalised_fileName;
     outputEvidenceDetails_filePath = outputRoot_filePath + outputEvidenceDetails_fileName;
     outputComparisonStatistics_filePath = outputRoot_filePath + outputComparisonStatistics_fileName;
-    outputEvanno_filePath = outputRoot_filePath + outputEvanno_fileName;
     outputMaxLike_alleleFreqs_filePath = outputRoot_filePath + outputMaxLike_alleleFreqs_fileName;
     outputMaxLike_admixFreqs_filePath = outputRoot_filePath + outputMaxLike_admixFreqs_fileName;
     outputPosteriorGrouping_filePath = outputRoot_filePath + outputPosteriorGrouping_fileName;
@@ -81,15 +79,11 @@ globals::globals() {
     parameterStrings["alphaPropSD"] = pair<string,int>("0.1",0); vector<double> alphaPropSD(1,0.1);
     
     parameterStrings["exhaustive_on"] = pair<string,int>("false",0); exhaustive_on = false;
-    parameterStrings["mainRepeats"] = pair<string,int>("1",0); mainRepeats = 1;
+    
     parameterStrings["mainBurnin"] = pair<string,int>("100",0); mainBurnin = 100;
     parameterStrings["mainSamples"] = pair<string,int>("1000",0); mainSamples = 1000;
-    parameterStrings["mainThinning"] = pair<string,int>("1",0); mainThinning = 1;
-    parameterStrings["thermodynamic_on"] = pair<string,int>("true",0); thermodynamic_on = true;
-    parameterStrings["thermodynamicRungs"] = pair<string,int>("21",0); thermodynamicRungs = 21;
-    parameterStrings["thermodynamicBurnin"] = pair<string,int>("100",0); thermodynamicBurnin = 100;
-    parameterStrings["thermodynamicSamples"] = pair<string,int>("1000",0); thermodynamicSamples = 1000;
-    parameterStrings["thermodynamicThinning"] = pair<string,int>("1",0); thermodynamicThinning = 1;
+    parameterStrings["mainRungs"] = pair<string,int>("10",0); mainRungs = 10;
+    
     parameterStrings["EMalgorithm_on"] = pair<string,int>("false",0); EMalgorithm_on = false;
     parameterStrings["EMrepeats"] = pair<string,int>("10",0); EMrepeats = 10;
     parameterStrings["EMiterations"] = pair<string,int>("100",0); EMiterations = 100;
@@ -107,14 +101,11 @@ globals::globals() {
     parameterStrings["outputEvidenceDetails_on"] = pair<string,int>("false",0); outputEvidenceDetails_on = false;
     parameterStrings["outputPosteriorGrouping_on"] = pair<string,int>("false",0); outputPosteriorGrouping_on = false;
     parameterStrings["outputComparisonStatistics_on"] = pair<string,int>("false",0); outputComparisonStatistics_on = false;
-    parameterStrings["outputEvanno_on"] = pair<string,int>("false",0); outputEvanno_on = false;
     parameterStrings["outputMaxLike_alleleFreqs_on"] = pair<string,int>("false",0); outputMaxLike_alleleFreqs_on = false;
     parameterStrings["outputMaxLike_admixFreqs_on"] = pair<string,int>("false",0); outputMaxLike_admixFreqs_on = false;
     
     parameterStrings["outputQmatrix_structureFormat_on"] = pair<string,int>("false",0); outputQmatrix_structureFormat_on = false;
     parameterStrings["suppressWarning1_on"] = pair<string,int>("false",0); suppressWarning1_on = false;
-    parameterStrings["fixLabels_on"] = pair<string,int>("true",0); fixLabels_on = true;
-    
     
     // parameters not defined by user
     lambda = 1.0;

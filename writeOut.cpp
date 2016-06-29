@@ -50,20 +50,14 @@ void initialiseGlobals(globals &globals) {
     // evidence estimates
     vector<double> nanVec = vector<double>(globals.Kmax-globals.Kmin+1,-sqrt(-1.0));
     globals.logEvidence_exhaustive = nanVec;
+    globals.logEvidence_harmonic = vector<double>(globals.Kmax-globals.Kmin+1);
+    globals.structure_loglike_mean = vector<double>(globals.Kmax-globals.Kmin+1);
+    globals.structure_loglike_var = vector<double>(globals.Kmax-globals.Kmin+1);
+    globals.logEvidence_structure = vector<double>(globals.Kmax-globals.Kmin+1);
     
-    globals.logEvidence_harmonic = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.mainRepeats));
-    globals.logEvidence_harmonic_grandMean = nanVec;
-    globals.logEvidence_harmonic_grandSE = nanVec;
-    
-    globals.structure_loglike_mean = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.mainRepeats));
-    globals.structure_loglike_var = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.mainRepeats));
-    globals.logEvidence_structure = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.mainRepeats));
-    globals.logEvidence_structure_grandMean = nanVec;
-    globals.logEvidence_structure_grandSE = nanVec;
-    
-    globals.TIpoint_mean = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.thermodynamicRungs,-sqrt(-1.0)));
-    globals.TIpoint_var = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.thermodynamicRungs,-sqrt(-1.0)));
-    globals.TIpoint_SE = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.thermodynamicRungs,-sqrt(-1.0)));
+    globals.TIpoint_mean = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.mainRungs,-sqrt(-1.0)));
+    globals.TIpoint_var = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.mainRungs,-sqrt(-1.0)));
+    globals.TIpoint_SE = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.mainRungs,-sqrt(-1.0)));
     globals.logEvidence_TI = nanVec;
     globals.logEvidence_TI_SE = nanVec;
     
@@ -82,10 +76,6 @@ void initialiseGlobals(globals &globals) {
     globals.BIC = nanVec;
     globals.DIC_Gelman = nanVec;
     globals.DIC_Spiegelhalter = nanVec;
-    
-    globals.L_1 = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.mainRepeats));
-    globals.L_2 = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.mainRepeats));
-    globals.delta_K = vector<double>(globals.Kmax-globals.Kmin+1);
     
 }
 
@@ -114,15 +104,9 @@ void openFileStreams(globals &globals) {
         // exhaustive
         globals.outputEvidence_fileStream << "K,logEvidence_exhaustive";
         // harmonic
-        for (int mainRep=0; mainRep<globals.mainRepeats; mainRep++) {
-            globals.outputEvidence_fileStream << ",logEvidence_harmonic_rep" << mainRep+1;
-        }
-        globals.outputEvidence_fileStream << ",logEvidence_harmonic_grandMean,logEvidence_harmonic_grandSE";
+        globals.outputEvidence_fileStream << ",logEvidence_harmonic";
         // structure
-        for (int mainRep=0; mainRep<globals.mainRepeats; mainRep++) {
-            globals.outputEvidence_fileStream << ",logEvidence_structure_rep" << mainRep+1;
-        }
-        globals.outputEvidence_fileStream << ",logEvidence_structure_grandMean,logEvidence_structure_grandSE";
+        globals.outputEvidence_fileStream << ",logEvidence_structure";
         // TI
         globals.outputEvidence_fileStream << ",logEvidence_TI,logEvidence_TI_SE";
         
@@ -143,18 +127,6 @@ void openFileStreams(globals &globals) {
         
     }
     
-    // Evanno
-    if (globals.outputEvanno_on) {
-        // open file stream
-        globals.outputEvanno_fileStream = safe_ofstream(globals.outputEvanno_filePath, globals.outputLog_on, globals.outputLog_fileStream);
-        // fixed headers
-        globals.outputEvanno_fileStream << "K,delta_K";
-        
-        globals.outputEvanno_fileStream << "\n";
-        globals.outputEvanno_fileStream.flush();
-        
-    }
-    
     // EvidenceDetails
     if (globals.outputEvidenceDetails_on) {
         // open file stream
@@ -162,22 +134,15 @@ void openFileStreams(globals &globals) {
         // fixed headers
         globals.outputEvidenceDetails_fileStream << "K";
         // structure mean and variance
-        for (int mainRep=0; mainRep<globals.mainRepeats; mainRep++) {
-            globals.outputEvidenceDetails_fileStream << ",structure_loglike_mean_rep" << mainRep+1;
-        }
-        for (int mainRep=0; mainRep<globals.mainRepeats; mainRep++) {
-            globals.outputEvidenceDetails_fileStream << ",structure_loglike_var_rep" << mainRep+1;
-        }
+        globals.outputEvidenceDetails_fileStream << ",structure_loglike_mean";
+        globals.outputEvidenceDetails_fileStream << ",structure_loglike_var";
         // TI mean and standard error
-        if (globals.thermodynamic_on) {
-            for (int TIrep=0; TIrep<globals.thermodynamicRungs; TIrep++) {
-                globals.outputEvidenceDetails_fileStream << ",TIpoint_mean_rung" << TIrep+1;
-            }
-            for (int TIrep=0; TIrep<globals.thermodynamicRungs; TIrep++) {
-                globals.outputEvidenceDetails_fileStream << ",TIpoint_SE_rung" << TIrep+1;
-            }
+        for (int TIrep=0; TIrep<globals.mainRungs; TIrep++) {
+            globals.outputEvidenceDetails_fileStream << ",TIpoint_mean_rung" << TIrep+1;
         }
-        
+        for (int TIrep=0; TIrep<globals.mainRungs; TIrep++) {
+            globals.outputEvidenceDetails_fileStream << ",TIpoint_SE_rung" << TIrep+1;
+        }
         globals.outputEvidenceDetails_fileStream << "\n";
         globals.outputEvidenceDetails_fileStream.flush();
         
@@ -242,18 +207,13 @@ void printEvidence(globals &globals, int Kindex) {
     
     // exhaustive
     globals.outputEvidence_fileStream << "," << process_nan(globals.logEvidence_exhaustive[Kindex]);
+    
     // harmonic
-    for (int mainRep=0; mainRep<globals.mainRepeats; mainRep++) {
-        globals.outputEvidence_fileStream << "," << process_nan(globals.logEvidence_harmonic[Kindex][mainRep]);
-    }
-    globals.outputEvidence_fileStream << "," << process_nan(globals.logEvidence_harmonic_grandMean[Kindex]);
-    globals.outputEvidence_fileStream << "," << process_nan(globals.logEvidence_harmonic_grandSE[Kindex]);
+    globals.outputEvidence_fileStream << "," << process_nan(globals.logEvidence_harmonic[Kindex]);
+    
     // structure
-    for (int mainRep=0; mainRep<globals.mainRepeats; mainRep++) {
-        globals.outputEvidence_fileStream << "," << process_nan(globals.logEvidence_structure[Kindex][mainRep]);
-    }
-    globals.outputEvidence_fileStream << "," << process_nan(globals.logEvidence_structure_grandMean[Kindex]);
-    globals.outputEvidence_fileStream << "," << process_nan(globals.logEvidence_structure_grandSE[Kindex]);
+    globals.outputEvidence_fileStream << "," << process_nan(globals.logEvidence_structure[Kindex]);
+    
     // TI
     globals.outputEvidence_fileStream << "," << process_nan(globals.logEvidence_TI[Kindex]);
     globals.outputEvidence_fileStream << "," << process_nan(globals.logEvidence_TI_SE[Kindex]);
@@ -271,21 +231,15 @@ void printEvidenceDetails(globals &globals, int Kindex) {
     globals.outputEvidenceDetails_fileStream << K;
     
     // Structure estimator details
-    for (int mainRep=0; mainRep<globals.mainRepeats; mainRep++) {
-        globals.outputEvidenceDetails_fileStream << "," << process_nan(globals.structure_loglike_mean[Kindex][mainRep]);
-    }
-    for (int mainRep=0; mainRep<globals.mainRepeats; mainRep++) {
-        globals.outputEvidenceDetails_fileStream << "," << process_nan(globals.structure_loglike_var[Kindex][mainRep]);
-    }
+    globals.outputEvidenceDetails_fileStream << "," << process_nan(globals.structure_loglike_mean[Kindex]);
+    globals.outputEvidenceDetails_fileStream << "," << process_nan(globals.structure_loglike_var[Kindex]);
     
     // thermodynamic integral estimator details
-    if (globals.thermodynamic_on) {
-        for (int TIrep=0; TIrep<globals.thermodynamicRungs; TIrep++) {
-            globals.outputEvidenceDetails_fileStream << "," << process_nan(globals.TIpoint_mean[Kindex][TIrep]);
-        }
-        for (int TIrep=0; TIrep<globals.thermodynamicRungs; TIrep++) {
-            globals.outputEvidenceDetails_fileStream << "," << process_nan(globals.TIpoint_SE[Kindex][TIrep]);
-        }
+    for (int TIrep=0; TIrep<globals.mainRungs; TIrep++) {
+        globals.outputEvidenceDetails_fileStream << "," << process_nan(globals.TIpoint_mean[Kindex][TIrep]);
+    }
+    for (int TIrep=0; TIrep<globals.mainRungs; TIrep++) {
+        globals.outputEvidenceDetails_fileStream << "," << process_nan(globals.TIpoint_SE[Kindex][TIrep]);
     }
     
     globals.outputEvidenceDetails_fileStream << "\n";
@@ -303,22 +257,13 @@ void printEvidenceNormalised(globals &globals) {
         globals.posterior_exhaustive = normalise_log(globals.logEvidence_exhaustive);
     
     // normalise harmonic mean results
-    if (globals.mainRepeats==1) {
-        globals.posterior_harmonic_mean = normalise_log(globals.logEvidence_harmonic_grandMean);
-    } else {
-        normalise_log_sim(globals.posterior_harmonic_mean, globals.posterior_harmonic_LL, globals.posterior_harmonic_UL, globals.logEvidence_harmonic_grandMean, globals.logEvidence_harmonic_grandSE, int(1e6));
-    }
+    globals.posterior_harmonic_mean = normalise_log(globals.logEvidence_harmonic);
     
     // normalise structure estimator results
-    if (globals.mainRepeats==1) {
-        globals.posterior_structure_mean = normalise_log(globals.logEvidence_structure_grandMean);
-    } else {
-        normalise_log_sim(globals.posterior_structure_mean, globals.posterior_structure_LL, globals.posterior_structure_UL, globals.logEvidence_structure_grandMean, globals.logEvidence_structure_grandSE, int(1e6));
-    }
+    globals.posterior_structure_mean = normalise_log(globals.logEvidence_structure);
     
     // normalise thermodynamic integral estimator results
-    if (globals.thermodynamic_on)
-        normalise_log_sim(globals.posterior_TI_mean, globals.posterior_TI_LL, globals.posterior_TI_UL, globals.logEvidence_TI, globals.logEvidence_TI_SE, int(1e6));
+    normalise_log_sim(globals.posterior_TI_mean, globals.posterior_TI_LL, globals.posterior_TI_UL, globals.logEvidence_TI, globals.logEvidence_TI_SE, int(1e6));
     
     // open file stream
     globals.outputEvidenceNormalised_fileStream = safe_ofstream(globals.outputEvidenceNormalised_filePath, globals.outputLog_on, globals.outputLog_fileStream);
@@ -399,21 +344,6 @@ void printComparisonStatistics(globals &globals, int Kindex) {
     globals.outputComparisonStatistics_fileStream << "\n";
     globals.outputComparisonStatistics_fileStream.flush();
     
-}
-
-//------------------------------------------------
-// write Evanno's delta K to file
-void printEvanno(globals &globals, int Kindex) {
-    int K = globals.Kmin+Kindex;
-    
-    if (K==1 || K==globals.Kmax) {
-        globals.outputEvanno_fileStream << K << ",NA";
-    } else {
-        globals.outputEvanno_fileStream << K << "," << globals.delta_K[Kindex];
-    }
-    
-    globals.outputEvanno_fileStream << "\n";
-    globals.outputEvanno_fileStream.flush();
 }
 
 //------------------------------------------------

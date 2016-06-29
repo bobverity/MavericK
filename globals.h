@@ -47,7 +47,6 @@ public:
     std::string outputEvidenceDetails_fileName;
     std::string outputPosteriorGrouping_fileName;
     std::string outputComparisonStatistics_fileName;
-    std::string outputEvanno_fileName;
     std::string outputMaxLike_alleleFreqs_fileName;
     std::string outputMaxLike_admixFreqs_fileName;
     
@@ -63,13 +62,11 @@ public:
     std::string outputQmatrixError_ind_filePath;
     std::string outputQmatrixError_pop_filePath;
     std::string outputQmatrixError_gene_filePath;
-    std::string outputAdmixture_filePath;
     std::string outputEvidence_filePath;
     std::string outputEvidenceNormalised_filePath;
     std::string outputEvidenceDetails_filePath;
     std::string outputPosteriorGrouping_filePath;
     std::string outputComparisonStatistics_filePath;
-    std::string outputEvanno_filePath;
     std::string outputMaxLike_alleleFreqs_filePath;
     std::string outputMaxLike_admixFreqs_filePath;
     std::string junk_filePath;
@@ -90,7 +87,6 @@ public:
     std::ofstream outputEvidenceDetails_fileStream;
     std::ofstream outputPosteriorGrouping_fileStream;
     std::ofstream outputComparisonStatistics_fileStream;
-    std::ofstream outputEvanno_fileStream;
     std::ofstream outputMaxLike_alleleFreqs_fileStream;
     std::ofstream outputMaxLike_admixFreqs_fileStream;
     std::ofstream junk_fileStream;
@@ -113,15 +109,11 @@ public:
     std::vector<double> alphaPropSD;
     
     bool exhaustive_on;
-    int mainRepeats;
+    
     int mainBurnin;
     int mainSamples;
-    int mainThinning;
-    bool thermodynamic_on;
-    int thermodynamicRungs;
-    int thermodynamicBurnin;
-    int thermodynamicSamples;
-    int thermodynamicThinning;
+    int mainRungs;
+    
     bool EMalgorithm_on;
     int EMrepeats;
     int EMiterations;
@@ -134,23 +126,19 @@ public:
     bool outputQmatrixError_ind_on;
     bool outputQmatrixError_pop_on;
     bool outputQmatrixError_gene_on;
-    bool outputAdmixture_on;
     bool outputEvidence_on;
     bool outputEvidenceNormalised_on;
     bool outputEvidenceDetails_on;
     bool outputPosteriorGrouping_on;
     bool outputComparisonStatistics_on;
-    bool outputEvanno_on;
     bool outputMaxLike_alleleFreqs_on;
     bool outputMaxLike_admixFreqs_on;
     
     bool outputQmatrix_structureFormat_on;
     bool suppressWarning1_on;
-    bool fixLabels_on;
     
     // parameters not defined by user
     double lambda;
-    
     
     // data
     std::vector<std::string> indLabels_vec;
@@ -176,16 +164,10 @@ public:
     std::vector< std::vector< std::vector<double> > > QmatrixError_pop;
     
     std::vector<double> logEvidence_exhaustive;
-    
-    std::vector< std::vector<double> > logEvidence_harmonic;
-    std::vector<double> logEvidence_harmonic_grandMean;
-    std::vector<double> logEvidence_harmonic_grandSE;
-    
-    std::vector< std::vector<double> > structure_loglike_mean;
-    std::vector< std::vector<double> > structure_loglike_var;
-    std::vector< std::vector<double> > logEvidence_structure;
-    std::vector<double> logEvidence_structure_grandMean;
-    std::vector<double> logEvidence_structure_grandSE;
+    std::vector<double> logEvidence_harmonic;
+    std::vector<double> structure_loglike_mean;
+    std::vector<double> structure_loglike_var;
+    std::vector<double> logEvidence_structure;
     
     std::vector< std::vector<double> > TIpoint_mean;
     std::vector< std::vector<double> > TIpoint_var;
@@ -213,10 +195,6 @@ public:
     std::vector<double> DIC_Spiegelhalter;
     std::vector<double> DIC_Gelman;
     
-    // first and second derivative of L (structure estimator) for Evanno calculation
-    std::vector< std::vector<double> > L_1;
-    std::vector< std::vector<double> > L_2;
-    std::vector<double> delta_K;
     
     // PUBLIC FUNCTIONS
     

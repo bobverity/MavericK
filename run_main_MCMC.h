@@ -18,11 +18,6 @@
 #include "probability.h"
 #include "misc.h"
 #include "MCMCobject_admixture.h"
-#include "MCMC_main_noAdmixture.h"
-
-//------------------------------------------------
-// main MCMC under no-admixture model, repeated multiple times
-void run_main_MCMC_noAdmixture(globals &globals, int Kindex);
 
 //------------------------------------------------
 // main MCMC under admixture model, repeated multiple times

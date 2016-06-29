@@ -190,9 +190,6 @@ void readParameters(globals &globals) {
         if (params[i]=="outputComparisonStatistics" && i+1<int(params.size()))
             globals.outputComparisonStatistics_fileName = params[i+1];
         
-        if (params[i]=="outputEvanno" && i+1<int(params.size()))
-            globals.outputEvanno_fileName = params[i+1];
-        
         if (params[i]=="outputMaxLike_alleleFreqs" && i+1<int(params.size()))
             globals.outputMaxLike_alleleFreqs_fileName = params[i+1];
         
@@ -249,23 +246,8 @@ void readParameters(globals &globals) {
         if (params[i]=="mainSamples" && i+1<int(params.size()))
             globals.parameterStrings["mainSamples"] = pair<string,int>(params[i+1],1);
         
-        if (params[i]=="mainThinning" && i+1<int(params.size()))
-            globals.parameterStrings["mainThinning"] = pair<string,int>(params[i+1],1);
-        
-        if (params[i]=="thermodynamic_on" && i+1<int(params.size()))
-            globals.parameterStrings["thermodynamic_on"] = pair<string,int>(params[i+1],1);
-        
-        if (params[i]=="thermodynamicRungs" && i+1<int(params.size()))
-            globals.parameterStrings["thermodynamicRungs"] = pair<string,int>(params[i+1],1);
-        
-        if (params[i]=="thermodynamicBurnin" && i+1<int(params.size()))
-            globals.parameterStrings["thermodynamicBurnin"] = pair<string,int>(params[i+1],1);
-        
-        if (params[i]=="thermodynamicSamples" && i+1<int(params.size()))
-            globals.parameterStrings["thermodynamicSamples"] = pair<string,int>(params[i+1],1);
-        
-        if (params[i]=="thermodynamicThinning" && i+1<int(params.size()))
-            globals.parameterStrings["thermodynamicThinning"] = pair<string,int>(params[i+1],1);
+        if (params[i]=="mainRungs" && i+1<int(params.size()))
+            globals.parameterStrings["mainRungs"] = pair<string,int>(params[i+1],1);
         
         if (params[i]=="EMalgorithm_on" && i+1<int(params.size()))
             globals.parameterStrings["EMalgorithm_on"] = pair<string,int>(params[i+1],1);
@@ -330,9 +312,6 @@ void readParameters(globals &globals) {
         if (params[i]=="suppressWarning1_on" && i+1<int(params.size()))
             globals.parameterStrings["suppressWarning1_on"] = pair<string,int>(params[i+1],1);
         
-        if (params[i]=="fixLabels_on" && i+1<int(params.size()))
-            globals.parameterStrings["fixLabels_on"] = pair<string,int>(params[i+1],1);
-        
     }
     
 }
@@ -371,7 +350,6 @@ void readCommandLine(globals &globals, int argc, const char * argv[]) {
         readPath("-outputEvidenceDetails", globals.outputEvidenceDetails_fileName, argc, argv, i);
         readPath("-outputPosteriorGrouping", globals.outputPosteriorGrouping_fileName, argc, argv, i);
         readPath("-outputComparisonStatistics", globals.outputComparisonStatistics_fileName, argc, argv, i);
-        readPath("-outputEvanno", globals.outputEvanno_fileName, argc, argv, i);
         readPath("-outputMaxLike_alleleFreqs", globals.outputMaxLike_alleleFreqs_fileName, argc, argv, i);
         readPath("-outputMaxLike_admixFreqs", globals.outputMaxLike_admixFreqs_fileName, argc, argv, i);
     }
@@ -392,7 +370,6 @@ void readCommandLine(globals &globals, int argc, const char * argv[]) {
     globals.outputEvidenceDetails_filePath = globals.outputRoot_filePath + globals.outputEvidenceDetails_fileName;
     globals.outputPosteriorGrouping_filePath = globals.outputRoot_filePath + globals.outputPosteriorGrouping_fileName;
     globals.outputComparisonStatistics_filePath = globals.outputRoot_filePath + globals.outputComparisonStatistics_fileName;
-    globals.outputEvanno_filePath = globals.outputRoot_filePath + globals.outputEvanno_fileName;
     globals.outputMaxLike_alleleFreqs_filePath = globals.outputRoot_filePath + globals.outputMaxLike_alleleFreqs_fileName;
     globals.outputMaxLike_admixFreqs_filePath = globals.outputRoot_filePath + globals.outputMaxLike_admixFreqs_fileName;
     
@@ -413,12 +390,7 @@ void readCommandLine(globals &globals, int argc, const char * argv[]) {
         readArgument("mainRepeats", globals, argc, argv, i);
         readArgument("mainBurnin", globals, argc, argv, i);
         readArgument("mainSamples", globals, argc, argv, i);
-        readArgument("mainThinning", globals, argc, argv, i);
-        readArgument("thermodynamic_on", globals, argc, argv, i);
-        readArgument("thermodynamicRungs", globals, argc, argv, i);
-        readArgument("thermodynamicBurnin", globals, argc, argv, i);
-        readArgument("thermodynamicSamples", globals, argc, argv, i);
-        readArgument("thermodynamicThinning", globals, argc, argv, i);
+        readArgument("mainRungs", globals, argc, argv, i);
         readArgument("EMalgorithm_on", globals, argc, argv, i);
         readArgument("EMrepeats", globals, argc, argv, i);
         readArgument("EMiterations", globals, argc, argv, i);
@@ -430,7 +402,6 @@ void readCommandLine(globals &globals, int argc, const char * argv[]) {
         readArgument("outputQmatrixError_ind_on", globals, argc, argv, i);
         readArgument("outputQmatrixError_pop_on", globals, argc, argv, i);
         readArgument("outputQmatrixError_gene_on", globals, argc, argv, i);
-        readArgument("outputAdmixture_on", globals, argc, argv, i);
         readArgument("outputEvidence_on", globals, argc, argv, i);
         readArgument("outputEvidenceNormalised_on", globals, argc, argv, i);
         readArgument("outputEvidenceDetails_on", globals, argc, argv, i);
@@ -441,7 +412,6 @@ void readCommandLine(globals &globals, int argc, const char * argv[]) {
         readArgument("outputMaxLike_admixFreqs_on", globals, argc, argv, i);
         readArgument("outputQmatrix_structureFormat_on", globals, argc, argv, i);
         readArgument("suppressWarning1_on", globals, argc, argv, i);
-        readArgument("fixLabels_on", globals, argc, argv, i);
     }
     
 }
@@ -548,13 +518,6 @@ void checkParameters(globals &globals, int i) {
                 writeToFile("  exhaustive_on = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
                 checkBoolean(it->second.first, globals.exhaustive_on, it->first, globals.outputLog_on, globals.outputLog_fileStream);
             }
-            if (it->first=="mainRepeats") {
-                writeToFile("  mainRepeats = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
-                
-                // check that integer greater than 0
-                checkInteger(it->second.first, globals.mainRepeats, it->first, globals.outputLog_on, globals.outputLog_fileStream);
-                checkGrZero(it->first, globals.mainRepeats, globals.outputLog_on, globals.outputLog_fileStream);
-            }
             if (it->first=="mainBurnin") {
                 writeToFile("  mainBurnin = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
                 
@@ -569,47 +532,12 @@ void checkParameters(globals &globals, int i) {
                 checkInteger(it->second.first, globals.mainSamples, it->first, globals.outputLog_on, globals.outputLog_fileStream);
                 checkGrZero(it->first, globals.mainSamples, globals.outputLog_on, globals.outputLog_fileStream);
             }
-            if (it->first=="mainThinning") {
-                writeToFile("  mainThinning = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
+            if (it->first=="mainRungs") {
+                writeToFile("  mainRungs = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
                 
                 // check that integer greater than 0
-                checkInteger(it->second.first, globals.mainThinning, it->first, globals.outputLog_on, globals.outputLog_fileStream);
-                checkGrZero(it->first, globals.mainThinning, globals.outputLog_on, globals.outputLog_fileStream);
-            }
-            if (it->first=="thermodynamic_on") {
-                writeToFile("  thermodynamic_on = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
-                checkBoolean(it->second.first, globals.thermodynamic_on, it->first, globals.outputLog_on, globals.outputLog_fileStream);
-            }
-            if (it->first=="thermodynamicRungs") {
-                writeToFile("  thermodynamicRungs = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
-                
-                // check that integer greater than or equal to 2
-                checkInteger(it->second.first, globals.thermodynamicRungs, it->first, globals.outputLog_on, globals.outputLog_fileStream);
-                if (globals.thermodynamicRungs<2) {
-                    cerrAndLog("\nError: 'thermodynamicRungs' parameter must be greater than or equal to 2\n", globals.outputLog_on, globals.outputLog_fileStream);
-                    exit(1);
-                }
-            }
-            if (it->first=="thermodynamicBurnin") {
-                writeToFile("  thermodynamicBurnin = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
-                
-                // check that integer greater than or equal to 0
-                checkInteger(it->second.first, globals.thermodynamicBurnin, it->first, globals.outputLog_on, globals.outputLog_fileStream);
-                checkGrEqZero(it->first, globals.thermodynamicBurnin, globals.outputLog_on, globals.outputLog_fileStream);
-            }
-            if (it->first=="thermodynamicSamples") {
-                writeToFile("  thermodynamicSamples = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
-                
-                // check that integer greater than 0
-                checkInteger(it->second.first, globals.thermodynamicSamples, it->first, globals.outputLog_on, globals.outputLog_fileStream);
-                checkGrZero(it->first, globals.thermodynamicSamples, globals.outputLog_on, globals.outputLog_fileStream);
-            }
-            if (it->first=="thermodynamicThinning") {
-                writeToFile("  thermodynamicThinning = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
-                
-                // check that integer greater than 0
-                checkInteger(it->second.first, globals.thermodynamicThinning, it->first, globals.outputLog_on, globals.outputLog_fileStream);
-                checkGrZero(it->first, globals.thermodynamicThinning, globals.outputLog_on, globals.outputLog_fileStream);
+                checkInteger(it->second.first, globals.mainRungs, it->first, globals.outputLog_on, globals.outputLog_fileStream);
+                checkGrZero(it->first, globals.mainRungs, globals.outputLog_on, globals.outputLog_fileStream);
             }
             if (it->first=="EMalgorithm_on") {
                 writeToFile("  EMalgorithm_on = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
@@ -661,10 +589,6 @@ void checkParameters(globals &globals, int i) {
                 writeToFile("  outputQmatrixError_gene_on = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
                 checkBoolean(it->second.first, globals.outputQmatrixError_gene_on, it->first, globals.outputLog_on, globals.outputLog_fileStream);
             }
-            if (it->first=="outputAdmixture_on") {
-                writeToFile("  outputAdmixture_on = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
-                checkBoolean(it->second.first, globals.outputAdmixture_on, it->first, globals.outputLog_on, globals.outputLog_fileStream);
-            }
             if (it->first=="outputEvidence_on") {
                 writeToFile("  outputEvidence_on = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
                 checkBoolean(it->second.first, globals.outputEvidence_on, it->first, globals.outputLog_on, globals.outputLog_fileStream);
@@ -685,10 +609,6 @@ void checkParameters(globals &globals, int i) {
                 writeToFile("  outputComparisonStatistics_on = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
                 checkBoolean(it->second.first, globals.outputComparisonStatistics_on, it->first, globals.outputLog_on, globals.outputLog_fileStream);
             }
-            if (it->first=="outputEvanno_on") {
-                writeToFile("  outputEvanno_on = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
-                checkBoolean(it->second.first, globals.outputEvanno_on, it->first, globals.outputLog_on, globals.outputLog_fileStream);
-            }
             if (it->first=="outputMaxLike_alleleFreqs_on") {
                 writeToFile("  outputMaxLike_alleleFreqs_on = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
                 checkBoolean(it->second.first, globals.outputMaxLike_alleleFreqs_on, it->first, globals.outputLog_on, globals.outputLog_fileStream);
@@ -704,10 +624,6 @@ void checkParameters(globals &globals, int i) {
             if (it->first=="suppressWarning1_on") {
                 writeToFile("  suppressWarning1_on = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
                 checkBoolean(it->second.first, globals.suppressWarning1_on, it->first, globals.outputLog_on, globals.outputLog_fileStream);
-            }
-            if (it->first=="fixLabels_on") {
-                writeToFile("  fixLabels_on = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
-                checkBoolean(it->second.first, globals.fixLabels_on, it->first, globals.outputLog_on, globals.outputLog_fileStream);
             }
         }
     }
@@ -1055,26 +971,17 @@ void checkOptions(globals &globals) {
     
     /*
      The following checks are carried out (in this order):
-     - fixLabels_on=true if producing any Qmatrix output
      - popCol_on=true if producing Qmatrix_pop files
      - admix_on=true if
         - producing Qmatrix_gene files
         - producing ML admixture freqs
      - outputQmatrix_?_on=true if outputQmatrixError_?_on=true
-     - mainRepeats>1 if producing QmatrixError files
      - EMalgorithm_on=true if
         - producing model comp stats
         - producing ML output
-     - (Kmax-Kmin)>=2 and mainRepeats>1 if outputEvanno_on=true
      - if using exhaustive approach, check that number of partitions required to sum over is reasonable. Otherwise throw warning
      - ensure that alpha and alphaPropSD vectors are of length 1 or (Kmax-Kmin+1). If former then duplicate value as needed.
      */
-    
-    // force fixLabels_on=true if producing any Qmatrix output
-    if (!globals.fixLabels_on && (globals.outputQmatrix_ind_on || globals.outputQmatrix_pop_on || globals.outputQmatrix_gene_on)) {
-        cerrAndLog("\nError: the label switching problem must be solved in order to produce Qmatrix output. Either set fixLabels_on to true, or turn off all Qmatrix output.\n", globals.outputLog_on, globals.outputLog_fileStream);
-        exit(1);
-    }
     
     // force popCol_on=true if producing Qmatrix_pop files
     if (!globals.popCol_on && globals.outputQmatrix_pop_on) {
@@ -1100,12 +1007,6 @@ void checkOptions(globals &globals) {
         exit(1);
     }
     
-    // force mainRepeats>1 if outputQmatrixError_?_on=true for all Qmatrix types
-    if (globals.mainRepeats==1 && (globals.outputQmatrixError_ind_on || globals.outputQmatrixError_pop_on || globals.outputQmatrixError_gene_on)) {
-        cerrAndLog("\nError: mainRepeats must be greater than 1 when any outputQmatrixError options are turned on.\n", globals.outputLog_on, globals.outputLog_fileStream);
-        exit(1);
-    }
-    
     // force EMalgorithm_on=true if producing model comparison statistics
     if (!globals.EMalgorithm_on && globals.outputComparisonStatistics_on) {
         cerrAndLog("\nError: EM algorithm must be turned on in order to compute model comparison statistics. Either turn on the EM algorithm (by setting EMalgorithm_on to true) or stop producing model comparison statistics (by setting outputComparisonStatistics_on to false).\n", globals.outputLog_on, globals.outputLog_fileStream);
@@ -1115,16 +1016,6 @@ void checkOptions(globals &globals) {
     // force EMalgorithm_on=true if producing maximum likelihood output
     if (!globals.EMalgorithm_on && (globals.outputMaxLike_alleleFreqs_on || globals.outputMaxLike_admixFreqs_on)) {
         cerrAndLog("\nError: EM algorithm must be turned on in order to produce maximum likelihood output files. Either turn on the EM algorithm (by setting EMalgorithm_on to true) or stop producing maximum likelihood output (by setting outputMaxLike_alleleFreqs_on and outputMaxLike_admixFreqs_on to false).\n", globals.outputLog_on, globals.outputLog_fileStream);
-        exit(1);
-    }
-    
-    // force (Kmax-Kmin)>=2 and mainRepeats>1 if outputEvanno_on=true
-    if ((globals.Kmax-globals.Kmin)<2 && globals.outputEvanno_on) {
-        cerrAndLog("\nError: Kmax must be at least 2 greater than Kmin when calculating Evanno's delta K.\n", globals.outputLog_on, globals.outputLog_fileStream);
-        exit(1);
-    }
-    if (globals.mainRepeats==1 && globals.outputEvanno_on) {
-        cerrAndLog("\nError: mainRepeats must be greater than 1 when calculating Evanno's delta K.\n", globals.outputLog_on, globals.outputLog_fileStream);
         exit(1);
     }
     

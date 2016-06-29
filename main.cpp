@@ -191,16 +191,14 @@ int main(int argc, const char * argv[])
             coutAndLog("  complete\n\n", globals.outputLog_on, globals.outputLog_fileStream);
         }
         
-        // main MCMC, including thermodynamic integration
-        if (globals.thermodynamic_on) {
-            coutAndLog("Carrying out thermodynamic integration...\n", globals.outputLog_on, globals.outputLog_fileStream);
-            if (!globals.admix_on) {
-                run_TI_MCMC_noAdmixture(globals, Kindex);
-            } else {
-                TI_admixture(globals, Kindex);
-            }
-            coutAndLog("  complete\n\n", globals.outputLog_on, globals.outputLog_fileStream);
+        // main MCMC (thermodynamic integration)
+        coutAndLog("Carrying out thermodynamic integration...\n", globals.outputLog_on, globals.outputLog_fileStream);
+        if (!globals.admix_on) {
+            run_TI_MCMC_noAdmixture(globals, Kindex);
+        } else {
+            TI_admixture(globals, Kindex);
         }
+        coutAndLog("  complete\n\n", globals.outputLog_on, globals.outputLog_fileStream);
         
         // EM algorithm
         if (globals.EMalgorithm_on) {
@@ -251,10 +249,6 @@ int main(int argc, const char * argv[])
         if (globals.outputComparisonStatistics_on)
             printComparisonStatistics(globals, Kindex);
         
-        // print Evanno's delta K to file
-        if (globals.outputEvanno_on && Kindex>0)
-            printEvanno(globals, Kindex-1);
-        
         //#### Report answers from various estimation methods to console and to log
         
         coutAndLog("Estimates of (log) model evidence...\n\n", globals.outputLog_on, globals.outputLog_fileStream);
@@ -265,34 +259,20 @@ int main(int argc, const char * argv[])
         
         // harmonic mean
         coutAndLog("Harmonic mean", globals.outputLog_on, globals.outputLog_fileStream);
-        if (globals.mainRepeats>1) {
-            coutAndLog(" (averaged over "+to_string((long long)globals.mainRepeats)+" runs)\n", globals.outputLog_on, globals.outputLog_fileStream);
-            coutAndLog("  estimate: "+process_nan(globals.logEvidence_harmonic_grandMean[Kindex])+"\n", globals.outputLog_on, globals.outputLog_fileStream);
-            coutAndLog("  standard error: "+process_nan(globals.logEvidence_harmonic_grandSE[Kindex])+"\n", globals.outputLog_on, globals.outputLog_fileStream);
-        } else {
-            coutAndLog(" (estimated from single run)\n", globals.outputLog_on, globals.outputLog_fileStream);
-            coutAndLog("  estimate: "+process_nan(globals.logEvidence_harmonic_grandMean[Kindex])+"\n", globals.outputLog_on, globals.outputLog_fileStream);
-        }
+        coutAndLog(" (estimated from single run)\n", globals.outputLog_on, globals.outputLog_fileStream);
+        coutAndLog("  estimate: "+process_nan(globals.logEvidence_harmonic[Kindex])+"\n", globals.outputLog_on, globals.outputLog_fileStream);
         coutAndLog("\n", globals.outputLog_on, globals.outputLog_fileStream);
         
         // structure estimator
         coutAndLog("Structure estimator", globals.outputLog_on, globals.outputLog_fileStream);
-        if (globals.mainRepeats>1) {
-            coutAndLog(" (averaged over "+to_string((long long)globals.mainRepeats)+" runs)\n", globals.outputLog_on, globals.outputLog_fileStream);
-            coutAndLog("  estimate: "+process_nan(globals.logEvidence_structure_grandMean[Kindex])+"\n", globals.outputLog_on, globals.outputLog_fileStream);
-            coutAndLog("  standard error: "+process_nan(globals.logEvidence_structure_grandSE[Kindex])+"\n", globals.outputLog_on, globals.outputLog_fileStream);
-        } else {
-            coutAndLog(" (estimated from single run)\n", globals.outputLog_on, globals.outputLog_fileStream);
-            coutAndLog("  estimate: "+process_nan(globals.logEvidence_structure_grandMean[Kindex])+"\n", globals.outputLog_on, globals.outputLog_fileStream);
-        }
+        coutAndLog(" (estimated from single run)\n", globals.outputLog_on, globals.outputLog_fileStream);
+        coutAndLog("  estimate: "+process_nan(globals.logEvidence_structure[Kindex])+"\n", globals.outputLog_on, globals.outputLog_fileStream);
         coutAndLog("\n", globals.outputLog_on, globals.outputLog_fileStream);
         
         // thermodynamic integral estimator
-        if (globals.thermodynamic_on) {
-            coutAndLog("Thermodynamic integral estimator\n", globals.outputLog_on, globals.outputLog_fileStream);
-            coutAndLog("  estimate: "+process_nan(globals.logEvidence_TI[Kindex])+"\n", globals.outputLog_on, globals.outputLog_fileStream);
-            coutAndLog("  standard error: "+process_nan(globals.logEvidence_TI_SE[Kindex])+"\n\n", globals.outputLog_on, globals.outputLog_fileStream);
-        }
+        coutAndLog("Thermodynamic integral estimator\n", globals.outputLog_on, globals.outputLog_fileStream);
+        coutAndLog("  estimate: "+process_nan(globals.logEvidence_TI[Kindex])+"\n", globals.outputLog_on, globals.outputLog_fileStream);
+        coutAndLog("  standard error: "+process_nan(globals.logEvidence_TI_SE[Kindex])+"\n\n", globals.outputLog_on, globals.outputLog_fileStream);
         
         // model comparison statistics
         if (globals.outputComparisonStatistics_on) {
@@ -306,10 +286,6 @@ int main(int argc, const char * argv[])
 		fflush(stdout);
         
     } // end loop through K
-    
-    // print final value of Evanno's delta K (NA) to file
-    if (globals.outputEvanno_on)
-        printEvanno(globals, globals.Kmax-globals.Kmin);
     
     // print normalised evidence to file
     if (globals.outputEvidenceNormalised_on)

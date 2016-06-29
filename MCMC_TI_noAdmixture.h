@@ -31,18 +31,33 @@ public:
     // basic quantities
     int Kindex;
     int K;
+    int n;
+    std::vector<std::string> uniquePops;
+    bool outputQmatrix_pop_on;
     int burnin;
     int samples;
-    int thinning;
     
     int rungs;
     std::vector<double> betaVec;
     std::vector<chain_noAdmixture> chainVec;
     
+    chain_noAdmixture spareChain;
+    std::vector<double> acceptanceRate;
+    
     // likelihoods
     std::vector<double> logLikeGroup_sum;
     std::vector<double> logLikeGroup_sumSquared;
     std::vector< std::vector<double> > logLikeGroup_store;
+    double logLikeJoint_sum;
+    double logLikeJoint_sumSquared;
+    double harmonic;
+    
+    // Qmatrices
+    std::vector< std::vector<double> > Qmatrix_ind;
+    std::vector< std::vector<double> > Qmatrix_pop;
+    
+    std::vector< std::vector<double> > Qmatrix_spare;
+    std::vector< std::vector<double> > Qmatrix_spare2;
     
     // autocorrelation
     std::vector<double> autoCorr;
@@ -64,7 +79,7 @@ public:
     MCMC_TI_noAdmixture(globals &globals, int _Kindex, int _rungs);
     
     // perform MCMC
-    void perform_MCMC();
+    void perform_MCMC(globals &globals, bool drawAlleleFreqs, bool fixLabels, bool outputLikelihood, bool outputPosteriorGrouping, int mainRep);
     
 
 };

@@ -157,8 +157,8 @@ void EM_noAdmix(globals &globals, int Kindex) {
         int freeParameters = K*(sum(globals.J)-globals.loci);
         globals.AIC[Kindex] = 2*freeParameters - 2*globals.maxLike;
         globals.BIC[Kindex] = freeParameters*log(double(globals.n)) - 2*globals.maxLike;
-        globals.DIC_Spiegelhalter[Kindex] = -4*globals.structure_loglike_mean[Kindex][0] + 2*globals.maxLike;
-        globals.DIC_Gelman[Kindex] = -2*globals.structure_loglike_mean[Kindex][0] + 2*globals.structure_loglike_var[Kindex][0];
+        globals.DIC_Spiegelhalter[Kindex] = -4*globals.structure_loglike_mean[Kindex] + 2*globals.maxLike;
+        globals.DIC_Gelman[Kindex] = -2*globals.structure_loglike_mean[Kindex] + 2*globals.structure_loglike_var[Kindex];
         
     }
     
@@ -342,8 +342,8 @@ void EM_admix(globals &globals, int Kindex) {
         int freeParameters = K*(sum(globals.J)-globals.loci) + globals.n*(K-1);
         globals.AIC[Kindex] = 2*freeParameters - 2*globals.maxLike;
         globals.BIC[Kindex] = freeParameters*log(double(globals.geneCopies)) - 2*globals.maxLike;
-        globals.DIC_Spiegelhalter[Kindex] = -4*globals.structure_loglike_mean[Kindex][0] + 2*globals.maxLike;
-        globals.DIC_Gelman[Kindex] = -2*globals.structure_loglike_mean[Kindex][0] + 2*globals.structure_loglike_var[Kindex][0];
+        globals.DIC_Spiegelhalter[Kindex] = -4*globals.structure_loglike_mean[Kindex] + 2*globals.maxLike;
+        globals.DIC_Gelman[Kindex] = -2*globals.structure_loglike_mean[Kindex] + 2*globals.structure_loglike_var[Kindex];
         
     }
     
