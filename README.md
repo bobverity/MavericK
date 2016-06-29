@@ -12,7 +12,7 @@ To all C++ coders out there - if you can see any obvious efficiency gains that c
 ## Version History
 
 29.06.2016  **Version1.0.3 released**<br>
-29.06.2016  Improved cross-platform compatibility. Fixed clock time.
+29.06.2016  Improved cross-platform compatibility. Fixed clock time, which previously gave incorrect runtime estimates.
 
 22.06.2016  **Version1.0.2 released**<br>
 21.06.2016  Added Metropolis-Hastings step to improve mixing under admixture model
