@@ -64,7 +64,7 @@ int main(int argc, const char * argv[])
     cout << "------------------------------------------\n";
     cout << "               MAVERICK\n";
     cout << "by Robert Verity and Richard A. Nichols\n";
-    cout << "      Version 1.0.2 (22 June 2016)\n";
+    cout << "      Version 1.1.0 (22 June 2016)\n";
     cout << "accessed " << ctime(&ctt);
     cout << "------------------------------------------\n\n";
     
@@ -114,7 +114,7 @@ int main(int argc, const char * argv[])
         globals.outputLog_fileStream << "------------------------------------------\n";
         globals.outputLog_fileStream << "               MAVERICK\n";
         globals.outputLog_fileStream << "by Robert Verity and Richard A. Nichols\n";
-        globals.outputLog_fileStream << "      Version 1.0.2 (22 June 2016)\n";
+        globals.outputLog_fileStream << "      Version 1.1.0 (22 June 2016)\n";
 		globals.outputLog_fileStream << "accessed " << ctime(&ctt);
         globals.outputLog_fileStream << "------------------------------------------\n\n";
         
