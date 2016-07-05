@@ -50,7 +50,7 @@ int main(int argc, const char * argv[])
     // start timing program
     time_t tstart, tend;
     time(&tstart);
-    
+
     //---------------------------------------------------------------------------------------------------
     
     // The logic of importing parameter values from file proceeds in the following steps:

@@ -425,9 +425,9 @@ void MCMCobject_noAdmixture::d_logLikeConditional(int i, int k) {
     // calculate conditional probability of data
     logProbVec[k] = 0;
     int d, a, a_t;  // for making temporary copies of data, alleleCounts, and alleleCountsTotals respectively
-    for (unsigned int l=0; l<loci; l++) {
+    for (int l=0; l<loci; l++) {
         a_t = alleleCountsTotals[k][l];
-        for (unsigned int p=0; p<ploidy_vec[i]; p++) {
+        for (int p=0; p<ploidy_vec[i]; p++) {
             d = data[i][l][p];
             a = alleleCounts[k][l][d-1];
             if (d!=0) {
@@ -440,7 +440,7 @@ void MCMCobject_noAdmixture::d_logLikeConditional(int i, int k) {
                 a_t ++;
             }
         }
-        for (unsigned int p=0; p<ploidy_vec[i]; p++) {
+        for (int p=0; p<ploidy_vec[i]; p++) {
             d = data[i][l][p];
             if (d!=0) {
                 alleleCounts[k][l][d-1] --;
@@ -459,9 +459,9 @@ void MCMCobject_noAdmixture::d_logLikeGroup() {
     for (int k=0; k<K; k++) {
         for (int l=0; l<loci; l++) {
             for (int j=0; j<J[l]; j++) {
-                logLikeGroup += lgamma(lambda + alleleCounts[k][l][j]) - lgamma(lambda);
+                logLikeGroup += my_lgamma(lambda + alleleCounts[k][l][j]) - my_lgamma(lambda);
             }
-            logLikeGroup += lgamma(J[l]*lambda) - lgamma(J[l]*lambda + alleleCountsTotals[k][l]);
+            logLikeGroup += my_lgamma(J[l]*lambda) - my_lgamma(J[l]*lambda + alleleCountsTotals[k][l]);
         }
     }
 

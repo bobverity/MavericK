@@ -471,7 +471,7 @@ void printQmatrix_gene(globals &globals, int Kindex) {
                 // probabilities
                 for (int k=0; k<K; k++) {
                     char * buffer = new char[256];
-                    sprintf(buffer, "%.3f", round(globals.Qmatrix_gene[Kindex][groupIndex][k]*1000)/1000.0);
+                    sprintf(buffer, "%.3f", my_round(globals.Qmatrix_gene[Kindex][groupIndex][k]*1000)/1000.0);
                     string s = buffer;
                     delete [] buffer;
                     globals.outputQmatrix_gene_fileStream << s;
@@ -533,7 +533,7 @@ void printQmatrixError_gene(globals &globals, int Kindex) {
                 // probabilities
                 for (int k=0; k<K; k++) {
                     char * buffer = new char[256];
-                    sprintf(buffer, "%.3f", round(globals.QmatrixError_gene[Kindex][groupIndex][k]*1000)/1000.0);
+                    sprintf(buffer, "%.3f", my_round(globals.QmatrixError_gene[Kindex][groupIndex][k]*1000)/1000.0);
                     string s = buffer;
                     delete [] buffer;
                     globals.outputQmatrixError_gene_fileStream << s;
@@ -594,7 +594,7 @@ void printQmatrix_ind(globals &globals, int Kindex) {
             globals.outputQmatrix_ind_fileStream << s;
             
             // missing data
-            double missPercent = round(globals.missing_vec[i]/double(globals.loci)/double(globals.ploidy_vec[i])*100);
+            double missPercent = my_round(globals.missing_vec[i]/double(globals.loci)/double(globals.ploidy_vec[i])*100);
             if (missPercent<10)
                 globals.outputQmatrix_ind_fileStream << " ";
             globals.outputQmatrix_ind_fileStream << "  (" << missPercent << ")   ";
@@ -611,7 +611,7 @@ void printQmatrix_ind(globals &globals, int Kindex) {
             // probabilities
             for (int k=0; k<K; k++) {
                 char * buffer = new char[256];
-                sprintf(buffer, "%.3f", round(globals.Qmatrix_ind[Kindex][i][k]*1000)/1000.0);
+                sprintf(buffer, "%.3f", my_round(globals.Qmatrix_ind[Kindex][i][k]*1000)/1000.0);
                 string s = buffer;
                 delete [] buffer;
                 globals.outputQmatrix_ind_fileStream << " " << s;
@@ -656,7 +656,7 @@ void printQmatrix_ind(globals &globals, int Kindex) {
         // probabilities
         for (int k=0; k<K; k++) {
             char * buffer = new char[256];
-            sprintf(buffer, "%.3f", round(globals.Qmatrix_ind[Kindex][i][k]*1000)/1000.0);
+            sprintf(buffer, "%.3f", my_round(globals.Qmatrix_ind[Kindex][i][k]*1000)/1000.0);
             string s = buffer;
             delete [] buffer;
             globals.outputQmatrix_ind_fileStream << s;
@@ -710,7 +710,7 @@ void printQmatrixError_ind(globals &globals, int Kindex) {
         // standard errors
         for (int k=0; k<K; k++) {
             char * buffer = new char[256];
-            sprintf(buffer, "%.6f", round(globals.QmatrixError_ind[Kindex][i][k]*1e6)/1e6);
+            sprintf(buffer, "%.6f", my_round(globals.QmatrixError_ind[Kindex][i][k]*1e6)/1e6);
             string s = buffer;
             delete [] buffer;
             globals.outputQmatrixError_ind_fileStream << s;
@@ -762,7 +762,7 @@ void printQmatrix_pop(globals &globals, int Kindex) {
             // probabilities
             for (int k=0; k<K; k++) {
                 char * buffer = new char[256];
-                sprintf(buffer, "%.3f", round(globals.Qmatrix_pop[Kindex][i][k]*1000)/1000.0);
+                sprintf(buffer, "%.3f", my_round(globals.Qmatrix_pop[Kindex][i][k]*1000)/1000.0);
                 string s = buffer;
                 delete [] buffer;
                 globals.outputQmatrix_pop_fileStream << s << " ";
@@ -802,7 +802,7 @@ void printQmatrix_pop(globals &globals, int Kindex) {
         // probabilities
         for (int k=0; k<K; k++) {
             char * buffer = new char[256];
-            sprintf(buffer, "%.3f", round(globals.Qmatrix_pop[Kindex][i][k]*1000)/1000.0);
+            sprintf(buffer, "%.3f", my_round(globals.Qmatrix_pop[Kindex][i][k]*1000)/1000.0);
             string s = buffer;
             delete [] buffer;
             globals.outputQmatrix_pop_fileStream << "," << s;
@@ -841,7 +841,7 @@ void printQmatrixError_pop(globals &globals, int Kindex) {
         // standard errors
         for (int k=0; k<K; k++) {
             char * buffer = new char[256];
-            sprintf(buffer, "%.6f", round(globals.QmatrixError_pop[Kindex][i][k]*1e6)/1e6);
+            sprintf(buffer, "%.6f", my_round(globals.QmatrixError_pop[Kindex][i][k]*1e6)/1e6);
             string s = buffer;
             delete [] buffer;
             globals.outputQmatrixError_pop_fileStream << "," << s;

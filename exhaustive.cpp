@@ -96,7 +96,7 @@ void exhaustive_noAdmix(globals &globals, int Kindex) {
         // some combinatorics to account for searching unique partitions only (see Notes.c for details)
         combined_logLike = logLike -globals.n*log(double(K));
         uniques = *max_element(begin(group),end(group));
-        combined_logLike += lgamma(double(K)+1)-lgamma(double(K)-double(uniques)+1);
+        combined_logLike += my_lgamma(double(K)+1)-my_lgamma(double(K)-double(uniques)+1);
         
         // add to running sum
         logLike_total = logSum(logLike_total, combined_logLike);
@@ -229,7 +229,7 @@ double exhaustive_admix_fixedAlpha(globals &globals, int Kindex, double alpha) {
         
         // some combinatorics to account for searching unique partitions only (see Notes.c for details)
         uniques = *max_element(begin(group),end(group));
-        combined_logLike = logLike + lgamma(double(K)+1)-lgamma(double(K)-double(uniques)+1);
+        combined_logLike = logLike + my_lgamma(double(K)+1)-my_lgamma(double(K)-double(uniques)+1);
         
         // add to running sum
         logLike_total = logSum(logLike_total, combined_logLike);

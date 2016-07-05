@@ -17,17 +17,12 @@
 #define __Maverick1_0__Windows_functions__
 
 #ifdef _WIN32
+
 //------------------------------------------------
 // round a double to nearest integer
-int round(double x);
+//int round(double x);
 
-//------------------------------------------------
-// the gamma function
-double gamma(double);
 
-//------------------------------------------------
-// the natural logarithm of the gamma function
-double lgamma(double);
 
 #endif
 #endif

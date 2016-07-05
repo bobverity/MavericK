@@ -47,9 +47,9 @@ MCMCobject_admixture::MCMCobject_admixture(globals &globals, int _Kindex, int _b
     
     linearGroup = vector<int>(geneCopies);
     group = vector< vector< vector<int> > >(n);
-    for (unsigned int ind=0; ind<n; ind++) {
+    for (int ind=0; ind<n; ind++) {
         group[ind] = vector< vector<int> >(loci);
-        for (unsigned int l=0; l<loci; l++) {
+        for (int l=0; l<loci; l++) {
             group[ind][l] = vector<int>(ploidy_vec[ind]);
         }
     }
@@ -324,9 +324,9 @@ void MCMCobject_admixture::group_update() {
     
     // update group allocation for this gene copy
     groupIndex=-1;
-    for (unsigned int ind=0; ind<n; ind++) {
-        for (unsigned int l=0; l<loci; l++) {
-            for (unsigned int p=0; p<ploidy_vec[ind]; p++) {
+    for (int ind=0; ind<n; ind++) {
+        for (int l=0; l<loci; l++) {
+            for (int p=0; p<ploidy_vec[ind]; p++) {
                 groupIndex++;
                 
                 // subtract this gene copy from allele counts and admix counts
@@ -340,7 +340,7 @@ void MCMCobject_admixture::group_update() {
                 
                 // calculate probability of this gene copy from all demes
                 probVecSum = 0;
-                for (unsigned int k=0; k<K; k++) {
+                for (int k=0; k<K; k++) {
                     if (data[ind][l][p]==0) {
                         probVec[k] = 1.0;
                     } else {
@@ -384,7 +384,7 @@ void MCMCobject_admixture::group_update_indLevel() {
     double rand1;
     int d;
     int thisGroup;
-    vector< vector<double> > newGroup(loci);
+    vector< vector<int> > newGroup(loci);
     
     // loop over all individuals
     groupIndex=-1;
@@ -393,8 +393,8 @@ void MCMCobject_admixture::group_update_indLevel() {
         // subtract all gene copies in this individual and calculate likelihood of current grouping at the same time
         logLike_old = 0;
         propose_logProb_old = 0;
-        for (unsigned int l=0; l<loci; l++) {
-            for (unsigned int p=0; p<ploidy_vec[ind]; p++) {
+        for (int l=0; l<loci; l++) {
+            for (int p=0; p<ploidy_vec[ind]; p++) {
                 d = data[ind][l][p];
                 
                 // subtract this gene copy from allele counts and admix counts
@@ -409,7 +409,7 @@ void MCMCobject_admixture::group_update_indLevel() {
                 
                 // calculate probability of this gene copy from all demes
                 probVecSum = 0;
-                for (unsigned int k=0; k<K; k++) {
+                for (int k=0; k<K; k++) {
                     if (d==0) {
                         probVec[k] = 1.0;
                     } else {
@@ -432,14 +432,14 @@ void MCMCobject_admixture::group_update_indLevel() {
         // propose a new grouping and calculate likelihood
         logLike_new = 0;
         propose_logProb_new = 0;
-        for (unsigned int l=0; l<loci; l++) {
-            newGroup[l] = vector<double>(ploidy_vec[ind]);
-            for (unsigned int p=0; p<ploidy_vec[ind]; p++) {
+        for (int l=0; l<loci; l++) {
+            newGroup[l] = vector<int>(ploidy_vec[ind]);
+            for (int p=0; p<ploidy_vec[ind]; p++) {
                 d = data[ind][l][p];
                 
                 // calculate probability of this gene copy from all demes
                 probVecSum = 0;
-                for (unsigned int k=0; k<K; k++) {
+                for (int k=0; k<K; k++) {
                     if (d==0) {
                         probVec[k] = 1.0;
                     } else {
@@ -477,8 +477,8 @@ void MCMCobject_admixture::group_update_indLevel() {
         if (log(rand1)<MH_diff) {
             
             // accept move
-            for (unsigned int l=0; l<loci; l++) {
-                for (unsigned int p=0; p<ploidy_vec[ind]; p++) {
+            for (int l=0; l<loci; l++) {
+                for (int p=0; p<ploidy_vec[ind]; p++) {
                     groupIndex++;
                     linearGroup[groupIndex] = newGroup[l][p];
                     group[ind][l][p] = newGroup[l][p];
@@ -488,8 +488,8 @@ void MCMCobject_admixture::group_update_indLevel() {
         } else {
             
             // reject move
-            for (unsigned int l=0; l<loci; l++) {
-                for (unsigned int p=0; p<ploidy_vec[ind]; p++) {
+            for (int l=0; l<loci; l++) {
+                for (int p=0; p<ploidy_vec[ind]; p++) {
                     groupIndex++;
                     d = data[ind][l][p];
                     if (d!=0) {   // if not missing data
@@ -587,11 +587,11 @@ void MCMCobject_admixture::alpha_update() {
     double logProb_old = 0;
     double logProb_new = 0;
     for (int i=0; i<n; i++) {
-        logProb_old += lgamma(K*alpha)-lgamma(admixCountsTotals[i]+K*alpha);
-        logProb_new += lgamma(K*alpha_new)-lgamma(admixCountsTotals[i]+K*alpha_new);
+        logProb_old += my_lgamma(K*alpha)-my_lgamma(admixCountsTotals[i]+K*alpha);
+        logProb_new += my_lgamma(K*alpha_new)-my_lgamma(admixCountsTotals[i]+K*alpha_new);
         for (int k=0; k<K; k++) {
-            logProb_old += lgamma(admixCounts[i][k]+alpha)-lgamma(alpha);
-            logProb_new += lgamma(admixCounts[i][k]+alpha_new)-lgamma(alpha_new);
+            logProb_old += my_lgamma(admixCounts[i][k]+alpha)-my_lgamma(alpha);
+            logProb_new += my_lgamma(admixCounts[i][k]+alpha_new)-my_lgamma(alpha_new);
         }
     }
     // perform Metropolis step
@@ -676,13 +676,13 @@ void MCMCobject_admixture::produceQmatrix() {
     
     // populate Qmatrix_gene_new
     groupIndex=-1;
-    for (unsigned int ind=0; ind<n; ind++) {
-        for (unsigned int l=0; l<loci; l++) {
-            for (unsigned int p=0; p<ploidy_vec[ind]; p++) {
+    for (int ind=0; ind<n; ind++) {
+        for (int l=0; l<loci; l++) {
+            for (int p=0; p<ploidy_vec[ind]; p++) {
                 groupIndex++;
                 
                 probVecSum = 0;
-                for (unsigned int k=0; k<K; k++) {
+                for (int k=0; k<K; k++) {
                     if (data[ind][l][p]==0) {
                         probVec[k] = 1.0;
                     } else {
@@ -691,7 +691,7 @@ void MCMCobject_admixture::produceQmatrix() {
                     probVec[k] *= double(admixCounts[ind][k]+alpha); // (denominator of this expression is the same for all k, so is omitted)
                     probVecSum += probVec[k];
                 }
-                for (unsigned int k=0; k<K; k++) {
+                for (int k=0; k<K; k++) {
                     Qmatrix_gene_new[groupIndex][k] = probVec[k]/probVecSum;
                     logQmatrix_gene_new[groupIndex][k] = log(Qmatrix_gene_new[groupIndex][k]);
                 }
@@ -779,9 +779,9 @@ void MCMCobject_admixture::d_logLikeGroup() {
     for (int k=0; k<K; k++) {
         for (int l=0; l<loci; l++) {
             for (int j=0; j<J[l]; j++) {
-                logLikeGroup += lgamma(lambda + alleleCounts[k][l][j]) - lgamma(lambda);
+                logLikeGroup += my_lgamma(lambda + alleleCounts[k][l][j]) - my_lgamma(lambda);
             }
-            logLikeGroup += lgamma(J[l]*lambda) - lgamma(J[l]*lambda + alleleCountsTotals[k][l]);
+            logLikeGroup += my_lgamma(J[l]*lambda) - my_lgamma(J[l]*lambda + alleleCountsTotals[k][l]);
         }
     }
     
