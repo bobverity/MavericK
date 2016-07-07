@@ -191,7 +191,7 @@ int main(int argc, const char * argv[])
             coutAndLog("  complete\n\n", globals.outputLog_on, globals.outputLog_fileStream);
         }
         
-        // main MCMC (thermodynamic integration)
+        // main MCMC (including thermodynamic integration)
         coutAndLog("Carrying out thermodynamic integration...\n", globals.outputLog_on, globals.outputLog_fileStream);
         if (!globals.admix_on) {
             run_TI_MCMC_noAdmixture(globals, Kindex);
