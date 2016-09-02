@@ -1,6 +1,6 @@
 //
 //  MavericK
-//  chain_noAdmixture.cpp
+//  particle_noAdmixture.cpp
 //
 //  Created: Bob on 22/06/2016
 //
@@ -10,7 +10,7 @@
 //
 // ---------------------------------------------------------------------------
 
-#include "chain_noAdmixture.h"
+#include "particle_noAdmixture.h"
 
 using namespace std;
 
@@ -18,14 +18,14 @@ extern vector< vector<double> > log_lookup;
 extern vector<double> log_lookup_0;
 
 //------------------------------------------------
-// chain_noAdmixture::
+// particle_noAdmixture::
 // default constructor for class
-chain_noAdmixture::chain_noAdmixture(){};
+particle_noAdmixture::particle_noAdmixture(){};
 
 //------------------------------------------------
-// chain_noAdmixture::
+// particle_noAdmixture::
 // informed constructor for class
-chain_noAdmixture::chain_noAdmixture(globals &globals, int _K, double _beta) {
+particle_noAdmixture::particle_noAdmixture(globals &globals, int _K, double _beta) {
     
     // copy some values over from globals object and arguments
     data = globals.data;
@@ -82,9 +82,9 @@ chain_noAdmixture::chain_noAdmixture(globals &globals, int _K, double _beta) {
 }
 
 //------------------------------------------------
-// chain_noAdmixture::
+// particle_noAdmixture::
 // reset objects used in MCMC
-void chain_noAdmixture::reset(bool reset_Qmatrix_running) {
+void particle_noAdmixture::reset(bool reset_Qmatrix_running) {
     
     // initialise group with random allocation
     vector<double> equalK(K,1/double(K));
@@ -130,9 +130,9 @@ void chain_noAdmixture::reset(bool reset_Qmatrix_running) {
 }
 
 //------------------------------------------------
-// chain_noAdmixture::
+// particle_noAdmixture::
 // resample group allocation of all individuals by drawing from conditional posterior
-void chain_noAdmixture::group_update() {
+void particle_noAdmixture::group_update() {
     
     // update group allocation for all individuals
     for (int ind=0; ind<n; ind++) {
@@ -188,28 +188,9 @@ void chain_noAdmixture::group_update() {
 }
 
 //------------------------------------------------
-// chain_noAdmixture::
-// calculate logQmatrix_ind_new for this iteration (commented out because using short-cut method of fixing label switching)
-void chain_noAdmixture::produceQmatrix() {
-    /*
-    // populate Qmatrix_ind_new
-    for (int i=0; i<n; i++) {
-        logProbVecSum = log(double(0));
-        for (int k=0; k<K; k++) {
-            d_logLikeConditional(i, k);   // update logProbVec[k]
-            logProbVecSum = logSum(logProbVecSum, logProbVec[k]);
-        }
-        for (int k=0; k<K; k++) {
-            logQmatrix_ind_new[i][k] = logProbVec[k]-logProbVecSum;
-        }
-    }
-    */
-}
-
-//------------------------------------------------
-// chain_noAdmixture::
+// particle_noAdmixture::
 // choose best permutation of labels using method of Stephens (2000)
-void chain_noAdmixture::chooseBestLabelPermutation(globals &globals) {
+void particle_noAdmixture::chooseBestLabelPermutation(globals &globals) {
     
     // calculate cost matrix from old and new Qmatrices
     for (int k1=0; k1<K; k1++) {
@@ -261,9 +242,9 @@ void chain_noAdmixture::chooseBestLabelPermutation(globals &globals) {
 }
 
 //------------------------------------------------
-// chain_noAdmixture::
+// particle_noAdmixture::
 // add logQmatrix_ind_new to logQmatrix_ind_running
-void chain_noAdmixture::updateQmatrix() {
+void particle_noAdmixture::updateQmatrix() {
     
     for (int i=0; i<n; i++) {
         for (int k=0; k<K; k++) {
@@ -273,9 +254,9 @@ void chain_noAdmixture::updateQmatrix() {
 }
 
 //------------------------------------------------
-// chain_noAdmixture::
+// particle_noAdmixture::
 // store Qmatrix values
-void chain_noAdmixture::storeQmatrix() {
+void particle_noAdmixture::storeQmatrix() {
     
     // store individual-level Qmatrix
     for (int i=0; i<n; i++) {
@@ -287,9 +268,9 @@ void chain_noAdmixture::storeQmatrix() {
 }
 
 //------------------------------------------------
-// chain_noAdmixture::
+// particle_noAdmixture::
 // probability of data given grouping only, integrated over unknown allele frequencies
-void chain_noAdmixture::d_logLikeGroup() {
+void particle_noAdmixture::d_logLikeGroup() {
     
     // Multinomial-Dirichlet likelihood
     logLikeGroup = 0;
@@ -305,9 +286,9 @@ void chain_noAdmixture::d_logLikeGroup() {
 }
 
 //------------------------------------------------
-// chain_noAdmixture::
+// particle_noAdmixture::
 // draw allele frequencies given allele counts and lambda prior
-void chain_noAdmixture::drawFreqs() {
+void particle_noAdmixture::drawFreqs() {
     
     double randSum;
     for (int k=0; k<K; k++) {
@@ -327,9 +308,9 @@ void chain_noAdmixture::drawFreqs() {
 }
 
 //------------------------------------------------
-// chain_noAdmixture::
+// particle_noAdmixture::
 // probability of data given grouping and allele frequencies
-void chain_noAdmixture::d_logLikeJoint() {
+void particle_noAdmixture::d_logLikeJoint() {
     
     // calculate likelihood
     logLikeJoint = 0;
@@ -352,9 +333,9 @@ void chain_noAdmixture::d_logLikeJoint() {
 }
 
 //------------------------------------------------
-// chain_noAdmixture::
+// particle_noAdmixture::
 // conditional probability of ith individual from kth deme (output in log space)
-void chain_noAdmixture::d_logLikeConditional(int i, int k) {
+void particle_noAdmixture::d_logLikeConditional(int i, int k) {
     
     // calculate conditional probability of data
     logProbVec[k] = 0;

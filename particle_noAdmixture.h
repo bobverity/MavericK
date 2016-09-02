@@ -1,17 +1,17 @@
 //
 //  MavericK
-//  chain_noAdmixture.h
+//  particle_noAdmixture.h
 //
 //  Created: Bob on 22/06/2016
 //
 //  Distributed under the MIT software licence - see Notes.c file for details
 //
-//  Defines a class that can be used to carry out MCMC under the without-admixture model.
+//  Defines a class that can be used to carry out MCMC under the without-admixture model for a single value of beta. This class is a "particle" in the sense that it moves around updating it's various parameter values without retaining any information. All saving of parameter values, likelihoods etc. must occur at a higher level.
 //
 // ---------------------------------------------------------------------------
 
-#ifndef __Maverick1_0__chain_noAdmixture__
-#define __Maverick1_0__chain_noAdmixture__
+#ifndef __Maverick1_0__particle_noAdmixture__
+#define __Maverick1_0__particle_noAdmixture__
 
 #include <iostream>
 #include "globals.h"
@@ -21,7 +21,7 @@
 
 //------------------------------------------------
 // class containing all elements required for MCMC under no-admixture model
-class chain_noAdmixture {
+class particle_noAdmixture {
     
 public:
     
@@ -79,8 +79,8 @@ public:
     // PUBLIC FUNCTIONS
     
     // constructors
-    chain_noAdmixture();
-    chain_noAdmixture(globals &globals, int _K, double _beta);
+    particle_noAdmixture();
+    particle_noAdmixture(globals &globals, int _K, double _beta);
     
     // reset
     void reset(bool reset_Qmatrix_running);
@@ -91,7 +91,6 @@ public:
     
     // label switching
     void chooseBestLabelPermutation(globals &globals);
-    void produceQmatrix();
     void updateQmatrix();
     void storeQmatrix();
     

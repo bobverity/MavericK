@@ -10,19 +10,19 @@
 //
 // ---------------------------------------------------------------------------
 
-#ifndef __Maverick1_0__MCMC_TI_noAdmixture__
-#define __Maverick1_0__MCMC_TI_noAdmixture__
+#ifndef __Maverick1_0__MCMC_noAdmixture__
+#define __Maverick1_0__MCMC_noAdmixture__
 
 #include <iostream>
 #include "globals.h"
 #include "probability.h"
 #include "misc.h"
 #include "Hungarian.h"
-#include "chain_noAdmixture.h"
+#include "particle_noAdmixture.h"
 
 //------------------------------------------------
 // class containing all elements required for MCMC under no-admixture model
-class MCMC_TI_noAdmixture {
+class MCMC_noAdmixture {
     
 public:
     
@@ -39,9 +39,9 @@ public:
     
     int rungs;
     std::vector<double> betaVec;
-    std::vector<chain_noAdmixture> chainVec;
+    std::vector<particle_noAdmixture> particleVec;
     
-    chain_noAdmixture spareChain;
+    particle_noAdmixture spareParticle;
     std::vector<double> acceptanceRate;
     
     // likelihoods
@@ -76,10 +76,10 @@ public:
     // PUBLIC FUNCTIONS
     
     // constructor
-    MCMC_TI_noAdmixture(globals &globals, int _Kindex, int _rungs);
+    MCMC_noAdmixture(globals &globals, int _Kindex, int _rungs);
     
     // perform MCMC
-    void perform_MCMC(globals &globals, bool drawAlleleFreqs, bool fixLabels, bool outputLikelihood, bool outputPosteriorGrouping, int mainRep);
+    void perform_MCMC(globals &globals, bool outputLikelihood, bool outputPosteriorGrouping);
     
 
 };

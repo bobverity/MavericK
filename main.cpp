@@ -30,6 +30,7 @@
  - replace logSum with underflow method in Q-matrix calculation?
  
 */
+// NOTE - now using shortcut method of label fixing, in which condition probabilities within an iteration are not recalculated pior to using Stephens' method.
 
 // include standard library header files
 #include <iostream>
@@ -45,7 +46,7 @@
 #include "OSfunctions.h"
 #include "probability.h"
 #include "run_main_MCMC.h"
-#include "run_TI_MCMC.h"
+#include "run_MCMC.h"
 #include "readIn.h"
 #include "writeOut.h"
 
@@ -194,7 +195,7 @@ int main(int argc, const char * argv[])
         // main MCMC (including thermodynamic integration)
         coutAndLog("Carrying out thermodynamic integration...\n", globals.outputLog_on, globals.outputLog_fileStream);
         if (!globals.admix_on) {
-            run_TI_MCMC_noAdmixture(globals, Kindex);
+            run_MCMC_noAdmixture(globals, Kindex);
         } else {
             TI_admixture(globals, Kindex);
         }

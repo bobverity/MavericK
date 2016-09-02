@@ -1,6 +1,6 @@
 //
 //  MavericK
-//  run_TI_MCMC.h
+//  run_MCMC.h
 //
 //  Created: Bob on 23/10/2015
 //
@@ -10,18 +10,18 @@
 //
 // ---------------------------------------------------------------------------
 
-#ifndef __Maverick1_0__run_TI_MCMC__
-#define __Maverick1_0__run_TI_MCMC__
+#ifndef __Maverick1_0__run_MCMC__
+#define __Maverick1_0__run_MCMC__
 
 #include <iostream>
 #include "globals.h"
 #include "MCMCobject_admixture.h"
 #include "misc.h"
-#include "MCMC_TI_noAdmixture.h"
+#include "MCMC_noAdmixture.h"
 
 //------------------------------------------------
 // thermodynamic integral estimator for no-admixture model
-void run_TI_MCMC_noAdmixture(globals &globals, int Kindex);
+void run_MCMC_noAdmixture(globals &globals, int Kindex);
 
 //------------------------------------------------
 // thermodynamic integral estimator for admixture model

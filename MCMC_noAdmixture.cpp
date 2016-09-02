@@ -10,14 +10,14 @@
 //
 // ---------------------------------------------------------------------------
 
-#include "MCMC_TI_noAdmixture.h"
+#include "MCMC_noAdmixture.h"
 
 using namespace std;
 
 //------------------------------------------------
-// MCMC_TI_noAdmixture::
+// MCMC_noAdmixture::
 // constructor for class containing all elements required for MCMC under no-admixture model
-MCMC_TI_noAdmixture::MCMC_TI_noAdmixture(globals &globals, int _Kindex, int _rungs) {
+MCMC_noAdmixture::MCMC_noAdmixture(globals &globals, int _Kindex, int _rungs) {
     
     // copy some values over from globals object
     Kindex = _Kindex;
@@ -28,13 +28,13 @@ MCMC_TI_noAdmixture::MCMC_TI_noAdmixture(globals &globals, int _Kindex, int _run
     burnin = globals.mainBurnin;
     samples = globals.mainSamples;
     
-    // create a chain for each rung
+    // create a particle for each rung
     rungs = _rungs;
     betaVec = vector<double>(rungs);
-    chainVec = vector<chain_noAdmixture>(rungs);
+    particleVec = vector<particle_noAdmixture>(rungs);
     for (int rung=0; rung<rungs; rung++) {
         betaVec[rung] = rung/double(rungs-1);
-        chainVec[rung] = chain_noAdmixture(globals, K, betaVec[rung]);
+        particleVec[rung] = particle_noAdmixture(globals, K, betaVec[rung]);
     }
     acceptanceRate = vector<double>(rungs-1);
     
@@ -65,38 +65,38 @@ MCMC_TI_noAdmixture::MCMC_TI_noAdmixture(globals &globals, int _Kindex, int _run
     logEvidence_TI_SE = 0;
     
 }
-
+//mainMCMC.perform_MCMC(globals, true, true, globals.outputLikelihood_on, globals.outputPosteriorGrouping_on);
 //------------------------------------------------
-// MCMC_TI_noAdmixture::
+// MCMC_noAdmixture::
 // perform complete MCMC under no-admixture model
-void MCMC_TI_noAdmixture::perform_MCMC(globals &globals, bool drawAlleleFreqs, bool fixLabels, bool outputLikelihood, bool outputPosteriorGrouping, int mainRep) {
+void MCMC_noAdmixture::perform_MCMC(globals &globals, bool outputLikelihood, bool outputPosteriorGrouping) {
     
     // reset chains
     for (int rung=0; rung<rungs; rung++) {
-        chainVec[rung].reset(true);
+        particleVec[rung].reset(true);
     }
     
     acceptanceRate = vector<double>(rungs-1);
     
     // perform MCMC
     for (int rep=0; rep<(burnin+samples); rep++) {
-            
+        
         // update group allocation of all individuals in all rungs
         for (int rung=0; rung<rungs; rung++) {
-            chainVec[rung].group_update();
+            particleVec[rung].group_update();
         }
         
         // loop over rungs
         for (int rung=0; rung<rungs; rung++) {
             
             // calculate marginal likelihood
-            chainVec[rung].d_logLikeGroup();
+            particleVec[rung].d_logLikeGroup();
             
             // add likelihoods to running sums
             if (rep>=burnin) {
-                logLikeGroup_sum[rung] += chainVec[rung].logLikeGroup;
-                logLikeGroup_sumSquared[rung] += chainVec[rung].logLikeGroup*chainVec[rung].logLikeGroup;
-                logLikeGroup_store[rung][rep-burnin] = chainVec[rung].logLikeGroup;
+                logLikeGroup_sum[rung] += particleVec[rung].logLikeGroup;
+                logLikeGroup_sumSquared[rung] += particleVec[rung].logLikeGroup*particleVec[rung].logLikeGroup;
+                logLikeGroup_store[rung][rep-burnin] = particleVec[rung].logLikeGroup;
             }
         }
         
@@ -104,9 +104,9 @@ void MCMC_TI_noAdmixture::perform_MCMC(globals &globals, bool drawAlleleFreqs, b
         // loop over rungs, starting with the second hottest chain and moving to the cold chain
         for (int rung=1; rung<rungs; rung++) {
             
-            // get log-likelihoods of hot and cold chain in the comparison
-            double coldLikelihood = chainVec[rung].logLikeGroup;
-            double hotLikelihood = chainVec[rung-1].logLikeGroup;
+            // get log-likelihoods of hot and cold particles in the comparison
+            double coldLikelihood = particleVec[rung].logLikeGroup;
+            double hotLikelihood = particleVec[rung-1].logLikeGroup;
             
             // calculate acceptance ratio (still in log space)
             double acceptance = (hotLikelihood*betaVec[rung] + coldLikelihood*betaVec[rung-1]) - (coldLikelihood*betaVec[rung] + hotLikelihood*betaVec[rung-1]);
@@ -115,18 +115,18 @@ void MCMC_TI_noAdmixture::perform_MCMC(globals &globals, bool drawAlleleFreqs, b
             double rand1 = runif1();
             if (log(rand1)<acceptance && 1==1) {
                 
-                spareChain = chainVec[rung];
-                Qmatrix_spare = chainVec[rung].logQmatrix_ind;
-                Qmatrix_spare2 = chainVec[rung].logQmatrix_ind_running;
+                spareParticle = particleVec[rung];
+                Qmatrix_spare = particleVec[rung].logQmatrix_ind;
+                Qmatrix_spare2 = particleVec[rung].logQmatrix_ind_running;
                 
-                chainVec[rung] = chainVec[rung-1];
-                chainVec[rung-1] = spareChain;
+                particleVec[rung] = particleVec[rung-1];
+                particleVec[rung-1] = spareParticle;
                 
-                chainVec[rung].beta = betaVec[rung];
-                chainVec[rung-1].beta = betaVec[rung-1];
+                particleVec[rung].beta = betaVec[rung];
+                particleVec[rung-1].beta = betaVec[rung-1];
                 
-                chainVec[rung].logQmatrix_ind = Qmatrix_spare;
-                chainVec[rung].logQmatrix_ind_running = Qmatrix_spare2;
+                particleVec[rung].logQmatrix_ind = Qmatrix_spare;
+                particleVec[rung].logQmatrix_ind_running = Qmatrix_spare2;
                 
                 acceptanceRate[rung-1] += 1.0/double(burnin+samples);
                 
@@ -137,57 +137,49 @@ void MCMC_TI_noAdmixture::perform_MCMC(globals &globals, bool drawAlleleFreqs, b
         // print to junk file
         if (rep>=burnin) {
             for (int rung=0; rung<rungs; rung++) {
-                globals.junk_fileStream << chainVec[rung].logLikeGroup << "\t";
+                globals.junk_fileStream << particleVec[rung].logLikeGroup << "\t";
             }
             globals.junk_fileStream << "\n";
         }
         
-        // if fix label-switching problem
-        if (fixLabels) {
-            
-            // fix label-switching problem
-            chainVec[rungs-1].chooseBestLabelPermutation(globals);
-            
-            // add logQmatrix_ind_new to logQmatrix_ind_running
-            chainVec[rungs-1].updateQmatrix();
-            
-            // store Qmatrix values if no longer in burn-in phase
-            if (rep>=burnin)
-                chainVec[rungs-1].storeQmatrix();
-        }
+        // fix label-switching problem
+        particleVec[rungs-1].chooseBestLabelPermutation(globals);
+        
+        // add logQmatrix_ind_new to logQmatrix_ind_running
+        particleVec[rungs-1].updateQmatrix();
+        
+        // store Qmatrix values if no longer in burn-in phase
+        if (rep>=burnin)
+            particleVec[rungs-1].storeQmatrix();
         
         // optionally draw allele frequencies and calculate joint likelihood
-        if (drawAlleleFreqs) {
-            chainVec[rungs-1].drawFreqs();
-            chainVec[rungs-1].d_logLikeJoint();
-        }
+        particleVec[rungs-1].drawFreqs();
+        particleVec[rungs-1].d_logLikeJoint();
         
         // add likelihoods to running sums
         if (rep>=burnin) {
             
             for (int rung=0; rung<rungs; rung++) {
-                logLikeGroup_sum[rung] += chainVec[rung].logLikeGroup;
-                logLikeGroup_sumSquared[rung] += chainVec[rung].logLikeGroup*chainVec[rung].logLikeGroup;
+                logLikeGroup_sum[rung] += particleVec[rung].logLikeGroup;
+                logLikeGroup_sumSquared[rung] += particleVec[rung].logLikeGroup*particleVec[rung].logLikeGroup;
             }
-            harmonic = logSum(harmonic, -chainVec[rungs-1].logLikeGroup);
+            harmonic = logSum(harmonic, -particleVec[rungs-1].logLikeGroup);
             
-            if (drawAlleleFreqs) {
-                logLikeJoint_sum += chainVec[rungs-1].logLikeJoint;
-                logLikeJoint_sumSquared += chainVec[rungs-1].logLikeJoint*chainVec[rungs-1].logLikeJoint;
-            }
+            logLikeJoint_sum += particleVec[rungs-1].logLikeJoint;
+            logLikeJoint_sumSquared += particleVec[rungs-1].logLikeJoint*particleVec[rungs-1].logLikeJoint;
         }
         
         // write to outputLikelihoods file
         if (outputLikelihood) {
-            globals.outputLikelihood_fileStream << K << "," << mainRep+1 << "," << rep-burnin+1 << "," << chainVec[rungs-1].logLikeGroup << "," << chainVec[rungs-1].logLikeJoint << "\n";
+            globals.outputLikelihood_fileStream << K << "," << 1 << "," << rep-burnin+1 << "," << particleVec[rungs-1].logLikeGroup << "," << particleVec[rungs-1].logLikeJoint << "\n";
             globals.outputLikelihood_fileStream.flush();
         }
         
         // write to outputPosteriorGrouping file
         if (outputPosteriorGrouping) {
-            globals.outputPosteriorGrouping_fileStream << K << "," << mainRep+1 << "," << rep-burnin+1;
+            globals.outputPosteriorGrouping_fileStream << K << "," << 1 << "," << rep-burnin+1;
             for (int i=0; i<n; i++) {
-                globals.outputPosteriorGrouping_fileStream << "," << chainVec[rungs-1].group[i];
+                globals.outputPosteriorGrouping_fileStream << "," << particleVec[rungs-1].group[i];
             }
             globals.outputPosteriorGrouping_fileStream << "\n";
             globals.outputPosteriorGrouping_fileStream.flush();

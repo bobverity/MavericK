@@ -1,6 +1,6 @@
 //
 //  MavericK
-//  run_TI_MCMC.cpp
+//  run_MCMC.cpp
 //
 //  Created: Bob on 23/10/2015
 //
@@ -10,13 +10,13 @@
 //
 // ---------------------------------------------------------------------------
 
-#include "run_TI_MCMC.h"
+#include "run_MCMC.h"
 
 using namespace std;
 
 //------------------------------------------------
-// thermodynamic integral estimator for no-admixture model
-void run_TI_MCMC_noAdmixture(globals &globals, int Kindex) {
+// run main MCMC for no-admixture model
+void run_MCMC_noAdmixture(globals &globals, int Kindex) {
     int K = globals.Kmin+Kindex;
     
     // special case if K==1
@@ -32,8 +32,8 @@ void run_TI_MCMC_noAdmixture(globals &globals, int Kindex) {
     }
     
     // perform MCMC
-    MCMC_TI_noAdmixture mainMCMC(globals, Kindex, globals.mainRungs);
-    mainMCMC.perform_MCMC(globals, true, true, globals.outputLikelihood_on, globals.outputPosteriorGrouping_on, 1);
+    MCMC_noAdmixture mainMCMC(globals, Kindex, globals.mainRungs);
+    mainMCMC.perform_MCMC(globals, globals.outputLikelihood_on, globals.outputPosteriorGrouping_on);
     
     // save Qmatrix values
     for (int i=0; i<globals.n; i++) {
@@ -67,7 +67,7 @@ void run_TI_MCMC_noAdmixture(globals &globals, int Kindex) {
 }
 
 //------------------------------------------------
-// thermodynamic integral estimator for admixture model
+// run main MCMC for admixture model
 void TI_admixture(globals &globals, int Kindex) {
     int K = globals.Kmin+Kindex;
     
