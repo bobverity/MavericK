@@ -33,6 +33,9 @@
 
 using namespace std;
 
+// create global objects
+vector< vector<double> > log_lookup;
+vector<double> log_lookup_0;
 
 // main function
 int main(int argc, const char * argv[])
@@ -123,6 +126,17 @@ int main(int argc, const char * argv[])
     
     // read in data and check format
     readData(globals);
+    
+    // create lookup table for log(i+(j+1)*lambda) function. The object log_lookup_0 does the same thing for j=0 only (it is slightly faster to index this vector rather than the first element of an array, as in log_lookup[i][0]).
+    int Jmax = *max_element(begin(globals.J),end(globals.J));
+    log_lookup = vector< vector<double> >(int(1e4),vector<double>(Jmax+1));
+    log_lookup_0 = vector<double>(int(1e4));
+    for (int i=0; i<int(1e4); i++) {
+        for (int j=0; j<Jmax; j++) {
+            log_lookup[i][j] = log(double(i+(j+1)*globals.lambda));
+        }
+        log_lookup_0[i] = log_lookup[i][0];
+    }
     
     // check that chosen options make sense
     checkOptions(globals);
