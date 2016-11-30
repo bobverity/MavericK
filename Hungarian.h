@@ -26,6 +26,6 @@ std::vector<int> augmentRight(int j, std::vector< std::vector<double> > &M, std:
 
 //------------------------------------------------
 // carry out Hungarian algorithm to find best matching given cost matrix M
-std::vector<int> hungarian(std::vector< std::vector<double> > &M, std::vector<int> &edgesLeft, std::vector<int> &edgesRight, std::vector<int> &blockedLeft, std::vector<int> &blockedRight, bool outputLog_on, std::ofstream &outputLog_fileStream);
+std::vector<int> hungarian(std::vector< std::vector<double> > &M, std::vector<int> &edgesLeft, std::vector<int> &edgesRight, std::vector<int> &blockedLeft, std::vector<int> &blockedRight);
 
 #endif

@@ -15,16 +15,16 @@
 
 #include <iostream>
 #include "globals.h"
-#include "MCMCobject_admixture.h"
 #include "misc.h"
 #include "MCMC_noAdmixture.h"
+#include "MCMC_admixture.h"
 
 //------------------------------------------------
-// thermodynamic integral estimator for no-admixture model
+// run main MCMC for no-admixture model
 void run_MCMC_noAdmixture(globals &globals, int Kindex);
 
 //------------------------------------------------
-// thermodynamic integral estimator for admixture model
-void TI_admixture(globals &globals, int Kindex);
+// run main MCMC for admixture model
+void run_MCMC_admixture(globals &globals, int Kindex);
 
 #endif

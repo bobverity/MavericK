@@ -14,20 +14,14 @@
  
  Ideas for how to speed up and reorganise program:
  
- - equal sample function
- - make chain object inside of MCMC
- - choose rung positions adaptively
- - Robbins-Monro update of alpha proposal standard deviation
+ - Robbins-Monro update of alpha proposal standard deviation, or...
  - move to gamma prior on alpha
  - data and groupings start from index 0
  - think about listing order of e.g. alleleCounts[k][l][j]. Could this order be rearranged to make faster inside likelihood calculation?
- - metropolis coupling
  - fancy mixture modelling techniques, such as linking over K
- - do I need alleleCountsTotals at all?
- - sample1 function designed to choose best K first
- - currently I am temporarily adding and subtracting elements when calculating likelihood, then adding again once K chosen. Avoid add-subtract-add step if K does not change
- - get rid of linearGroup
- - replace logSum with underflow method in Q-matrix calculation?
+ - do I need alleleCountsTotals at all? (Yes, I think so). What about admixCountsTotals?
+ - currently I am temporarily adding and subtracting elements when calculating likelihood, then adding again once K chosen. Avoid add-subtract-add step if K does not change? Under admixture model?
+ - get rid of MCMC class? Replace with simple void functions?
  
 */
 // NOTE - now using shortcut method of label fixing, in which condition probabilities within an iteration are not recalculated pior to using Stephens' method.
@@ -41,11 +35,9 @@
 #include "exhaustive.h"
 #include "globals.h"
 #include "Hungarian.h"
-#include "MCMCobject_admixture.h"
 #include "misc.h"
 #include "OSfunctions.h"
 #include "probability.h"
-#include "run_main_MCMC.h"
 #include "run_MCMC.h"
 #include "readIn.h"
 #include "writeOut.h"
@@ -55,6 +47,9 @@ using namespace std;
 // create global objects
 vector< vector<double> > log_lookup;
 vector<double> log_lookup_0;
+
+int test1 = 0;
+int test2 = 0;
 
 // main function
 int main(int argc, const char * argv[])
@@ -145,7 +140,7 @@ int main(int argc, const char * argv[])
     // read in data and check format
     readData(globals);
     
-    // create lookup table for log(i+(j+1)*lambda) function. The object log_lookup_0 does the same thing for the first element only (it is slightly faster to index this vector rather than the first element of an array).
+    // create lookup table for log(i+(j+1)*lambda) function. The object log_lookup_0 does the same thing for j=0 only (it is slightly faster to index this vector rather than the first element of an array, as in log_lookup[i][0]).
     int Jmax = *max_element(begin(globals.J),end(globals.J));
     log_lookup = vector< vector<double> >(int(1e4),vector<double>(Jmax+1));
     log_lookup_0 = vector<double>(int(1e4));
@@ -172,7 +167,6 @@ int main(int argc, const char * argv[])
     // open file stream for junk output (comment out as needed)
     globals.junk_fileStream = safe_ofstream(globals.outputRoot_filePath + "junk.txt", false, globals.outputLog_fileStream);
     
-    
     // loop through range of K
     for (int Kindex=0; Kindex<(globals.Kmax-globals.Kmin+1); Kindex++) {
         int K = globals.Kmin+Kindex;
@@ -197,7 +191,7 @@ int main(int argc, const char * argv[])
         if (!globals.admix_on) {
             run_MCMC_noAdmixture(globals, Kindex);
         } else {
-            TI_admixture(globals, Kindex);
+            run_MCMC_admixture(globals, Kindex);
         }
         coutAndLog("  complete\n\n", globals.outputLog_on, globals.outputLog_fileStream);
         
@@ -298,6 +292,11 @@ int main(int argc, const char * argv[])
     coutAndLog("Program completed in "+to_string((double long)duration)+string(" seconds\n"), globals.outputLog_on, globals.outputLog_fileStream);
     coutAndLog("Output written to: "+globals.outputRoot_filePath+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
     coutAndLog("------------------------------------------\n", globals.outputLog_on, globals.outputLog_fileStream);
+    
+    print(test1);
+    print(test2);
+    double testPercent = test1/double(test2)*100;
+    print(testPercent);
     
     //pauseExit();
     return(0);

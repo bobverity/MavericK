@@ -25,8 +25,32 @@ double runif1(double a=0, double b=1);
 double rgamma1(double shape, double rate);
 
 //------------------------------------------------
+// draw from beta(shape1,shape2) distribution
+double rbeta1(double shape1, double shape2);
+
+//------------------------------------------------
 // sample from given probability vector (that sums to pSum)
 int sample1(std::vector<double> &p, double pSum);
+
+//------------------------------------------------
+// sample single value x that lies between a and b (inclusive) with equal probability
+int sample2(int b, int a=1);
+
+//------------------------------------------------
+// sample n terms without replacement from vector x
+std::vector<int> sample3(std::vector<int> x, int n);
+
+//------------------------------------------------
+// reshuffle a vector
+void shuffle1(std::vector<int> &x);
+
+//------------------------------------------------
+// draw from Bernoulli(p) distribution
+int rbernoulli1(double p);
+
+//------------------------------------------------
+// draw number of unique groups under Chinese restaurant process
+int rCRPgroups(int n, double alpha);
 
 //------------------------------------------------
 // draw from univariate normal distribution

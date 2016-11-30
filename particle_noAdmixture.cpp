@@ -17,6 +17,9 @@ using namespace std;
 extern vector< vector<double> > log_lookup;
 extern vector<double> log_lookup_0;
 
+extern int test1;
+extern int test2;
+
 //------------------------------------------------
 // particle_noAdmixture::
 // default constructor for class
@@ -39,15 +42,17 @@ particle_noAdmixture::particle_noAdmixture(globals &globals, int _K, double _bet
     
     // initialise grouping vector
     group = vector<int>(n,1);
+    group_propose = vector<int>(n);
+    group_order = vector<int>(n);
+    for (int i=0; i<n; i++) {
+        group_order[i] = i+1;
+    }
     
     // initialise allele counts and frequencies
-    alleleCounts = vector< vector< vector<int> > >(K);
-    alleleCountsTotals = vector< vector<int> >(K);
-    alleleFreqs = vector< vector< vector<double> > >(K);
+    alleleCounts = vector< vector< vector<int> > >(K, vector< vector<int> >(loci));
+    alleleCountsTotals = vector< vector<int> >(K, vector<int>(loci));
+    alleleFreqs = vector< vector< vector<double> > >(K, vector< vector<double> >(loci));
     for (int k=0; k<K; k++) {
-        alleleCounts[k] = vector< vector<int> >(loci);
-        alleleCountsTotals[k] = vector<int>(loci);
-        alleleFreqs[k] = vector< vector<double> >(loci);
         for (int l=0; l<loci; l++) {
             alleleCounts[k][l] = vector<int>(J[l]);
             alleleFreqs[k][l] = vector<double>(J[l]);
@@ -56,57 +61,49 @@ particle_noAdmixture::particle_noAdmixture(globals &globals, int _K, double _bet
     
     // initialise objects for calculating assignment probabilities
     logProbVec = vector<double>(K);
-    logProbVecSum = 0;  // (used in Qmatrix calculation)
     logProbVecMax = 0;
     probVec = vector<double>(K);
     probVecSum = 0;
     
-    // initialise Qmatrices
-    logQmatrix_ind_old = vector< vector<double> >(n, vector<double>(K));
-    Qmatrix_ind_new = vector< vector<double> >(n, vector<double>(K));
-    logQmatrix_ind_new = vector< vector<double> >(n, vector<double>(K));
-    logQmatrix_ind_running = vector< vector<double> >(n, vector<double>(K));
+    // initialise likelihoods
+    logLikeGroup = 0;
+    logLikeJoint = 0;
     
+    // initialise Qmatrices
     logQmatrix_ind = vector< vector<double> >(n, vector<double>(K));
     Qmatrix_ind = vector< vector<double> >(n, vector<double>(K));
-    
-    // initialise objects for Hungarian algorithm
-    costMat = vector< vector<double> >(K, vector<double>(K));
-    bestPermOrder = vector<int>(K);
-    
-    edgesLeft = vector<int>(K);
-    edgesRight = vector<int>(K);
-    blockedLeft = vector<int>(K);
-    blockedRight = vector<int>(K);
     
 }
 
 //------------------------------------------------
 // particle_noAdmixture::
 // reset objects used in MCMC
-void particle_noAdmixture::reset(bool reset_Qmatrix_running) {
+void particle_noAdmixture::reset() {
     
     // initialise group with random allocation
-    vector<double> equalK(K,1/double(K));
     for (int i=0; i<n; i++) {
-        group[i] = sample1(equalK,1.0);
+        group[i] = sample2(1,K);
     }
     
     // zero allele counts
     for (int k=0; k<K; k++) {
-        alleleCountsTotals[k] = vector<int>(loci);
         for (int l=0; l<loci; l++) {
-            alleleCounts[k][l] = vector<int>(J[l]);
+            alleleCountsTotals[k][l] = 0;
+            for (int j=0; j<J[l]; j++) {
+                alleleCounts[k][l][j] = 0;
+            }
         }
     }
     
     // populate allele counts based on grouping
     for (int ind=0; ind<n; ind++) {
         for (int l=0; l<loci; l++) {
+            thisGroup = group[ind];
             for (int p=0; p<ploidy_vec[ind]; p++) {
-                if (data[ind][l][p]!=0) {
-                    alleleCounts[group[ind]-1][l][data[ind][l][p]-1]++;
-                    alleleCountsTotals[group[ind]-1][l]++;
+                thisData1 = data[ind][l][p];
+                if (thisData1!=0) {
+                    alleleCounts[thisGroup-1][l][thisData1-1]++;
+                    alleleCountsTotals[thisGroup-1][l]++;
                 }
             }
         }
@@ -117,15 +114,12 @@ void particle_noAdmixture::reset(bool reset_Qmatrix_running) {
     logLikeJoint = 0;
     
     // reset Qmatrices
-    logQmatrix_ind_old = vector< vector<double> >(n, vector<double>(K));
-    Qmatrix_ind_new = vector< vector<double> >(n, vector<double>(K));
-    logQmatrix_ind_new = vector< vector<double> >(n, vector<double>(K));
-    if (reset_Qmatrix_running) {
-        logQmatrix_ind_running = vector< vector<double> >(n, vector<double>(K,-log(double(K))));
+    for (int i=0; i<n; i++) {
+        for (int k=0; k<K; k++) {
+            Qmatrix_ind[i][k] = 0;
+            logQmatrix_ind[i][k] = 0;
+        }
     }
-    
-    logQmatrix_ind = vector< vector<double> >(n, vector<double>(K, log(double(0))));
-    Qmatrix_ind = vector< vector<double> >(n, vector<double>(K));
     
 }
 
@@ -136,49 +130,35 @@ void particle_noAdmixture::group_update() {
     
     // update group allocation for all individuals
     for (int ind=0; ind<n; ind++) {
+        thisGroup = group[ind];
         
         // subtract individual ind from allele counts
         for (int l=0; l<loci; l++) {
             for (int p=0; p<ploidy_vec[ind]; p++) {
-                if (data[ind][l][p]!=0) {   // if not missing data
-                    alleleCounts[group[ind]-1][l][data[ind][l][p]-1]--;
-                    alleleCountsTotals[group[ind]-1][l]--;
+                thisData1 = data[ind][l][p];
+                if (thisData1!=0) {   // if not missing data
+                    alleleCounts[thisGroup-1][l][thisData1-1]--;
+                    alleleCountsTotals[thisGroup-1][l]--;
                 }
             }
         }
         
-        // calculate probability of individual ind from all demes
+        // resample group allocation of individual ind
         if (beta==0) {    // special case if beta==0 (draw from prior)
-            logProbVec = vector<double>(K,-log(double(K)));
-            probVec = vector<double>(K,1/double(K));
-            probVecSum = 1.0;
+            thisGroup = sample2(1,K);
         } else {
-            for (int k=0; k<K; k++) {
-                d_logLikeConditional(ind, k);   // update logProbVec[k]
-            }
-            logProbVecMax = *max_element(begin(logProbVec),end(logProbVec));
-            probVecSum = 0;
-            for (int k=0; k<K; k++) {
-                probVec[k] = exp(beta*logProbVec[k]-beta*logProbVecMax);
-                probVecSum += probVec[k];
-            }
-            // use these values to define Qmatrix_ind_new for this iteration
-            logProbVecSum = log(probVecSum);
-            for (int k=0; k<K; k++) {
-                logQmatrix_ind_new[ind][k] = logProbVec[k]- (logProbVecSum + logProbVecMax);
-                Qmatrix_ind_new[ind][k] = probVec[k]/probVecSum;
-            }
+            group_probs(ind);
+            thisGroup = sample1(probVec, probVecSum);
         }
-        
-        // resample grouping
-        group[ind] = sample1(probVec, probVecSum);
+        group[ind] = thisGroup;
         
         // add individual ind to allele counts
         for (int l=0; l<loci; l++) {
             for (int p=0; p<ploidy_vec[ind]; p++) {
-                if (data[ind][l][p]!=0) {   // if not missing data
-                    alleleCounts[group[ind]-1][l][data[ind][l][p]-1]++;
-                    alleleCountsTotals[group[ind]-1][l]++;
+                thisData1 = data[ind][l][p];
+                if (thisData1!=0) {   // if not missing data
+                    alleleCounts[thisGroup-1][l][thisData1-1]++;
+                    alleleCountsTotals[thisGroup-1][l]++;
                 }
             }
         }
@@ -189,80 +169,161 @@ void particle_noAdmixture::group_update() {
 
 //------------------------------------------------
 // particle_noAdmixture::
-// choose best permutation of labels using method of Stephens (2000)
-void particle_noAdmixture::chooseBestLabelPermutation(globals &globals) {
+// calculate conditional probability of individual ind coming from each deme
+void particle_noAdmixture::group_probs(int ind) {
     
-    // calculate cost matrix from old and new Qmatrices
-    for (int k1=0; k1<K; k1++) {
-        for (int k2=0; k2<K; k2++) {
-            costMat[k1][k2] = 0;
-            for (int i=0; i<n; i++) {
-                costMat[k1][k2] += Qmatrix_ind_new[i][k1]*(logQmatrix_ind_new[i][k1]-logQmatrix_ind_running[i][k2]);
-            }
-        }
-    }
-    
-    // find best permutation of current labels
-    bestPerm = hungarian(costMat, edgesLeft, edgesRight, blockedLeft, blockedRight, globals.outputLog_on, globals.outputLog_fileStream);
-
-    // define bestPermOrder. If the numbers 1:m_K are placed in best-perm-order then we arrive back at bestPerm. In R terms we would say bestPermOrder=order(bestPerm).
-    bool performSwap = false;
     for (int k=0; k<K; k++) {
-        bestPermOrder[bestPerm[k]] = k;
-        if (bestPerm[k]!=k)
-            performSwap = true;
+        d_logLikeConditional(ind, k);   // recalculate logProbVec[k]
+    }
+    logProbVecMax = *max_element(begin(logProbVec),end(logProbVec));
+    probVecSum = 0;
+    for (int k=0; k<K; k++) {
+        probVec[k] = exp(beta*logProbVec[k]-beta*logProbVecMax);
+        probVecSum += probVec[k];
     }
     
-    // swap labels if necessary
-    if (performSwap) {
+}
+
+//------------------------------------------------
+// particle_noAdmixture::
+// resample group allocation of all individuals by drawing from conditional posterior
+void particle_noAdmixture::group_update_Klevel() {
+    
+    // if beta==0 then all moves accepted, so skip
+    if (beta==0)
+        return;
+    
+    // choose two distinct random groups
+    int K1 = sample2(1,K);
+    int K2 = sample2(1,K);
+    if (K2==K1) {
+        K2++;
+        if (K2>K)
+            K2 = 1;
+    }
+    
+    // search through observations in random order
+    shuffle1(group_order);
+    
+    // subtract all individuals in these two groups
+    double logLike_old = 0;
+    double propose_logProb_old = 0;
+    for (int i=(n-1); i>=0; i--) {  // loop backwards through group_order
+        int ind = group_order[i]-1;
+        thisGroup = group[ind];
+        if (thisGroup==K1 || thisGroup==K2) {
         
-        // update grouping to reflect swapped labels
-        for (int i=0; i<n; i++) {
-            group[i] = bestPerm[group[i]-1]+1;
+            // subtract individual ind from allele counts
+            for (int l=0; l<loci; l++) {
+                for (int p=0; p<ploidy_vec[ind]; p++) {
+                    thisData1 = data[ind][l][p];
+                    if (thisData1!=0) {   // if not missing data
+                        alleleCounts[thisGroup-1][l][thisData1-1]--;
+                        alleleCountsTotals[thisGroup-1][l]--;
+                    }
+                }
+            }
+            
+            // recalculate probability of allocation to K1 or K2
+            d_logLikeConditional(ind, K1-1);   // recalculate logProbVec[K1]
+            d_logLikeConditional(ind, K2-1);   // recalculate logProbVec[K2]
+            logProbVecMax = (K1>K2) ? K1 : K2;
+            probVec[K1-1] = exp(beta*logProbVec[K1-1]-beta*logProbVecMax);
+            probVec[K2-1] = exp(beta*logProbVec[K2-1]-beta*logProbVecMax);
+            probVecSum = probVec[K1-1] + probVec[K2-1];
+            
+            // calculate probability of chosen grouping
+            propose_logProb_old += log(probVec[thisGroup-1]/probVecSum);
+            logLike_old += beta*logProbVec[thisGroup-1];
+            
         }
-        
-        // update allele counts to reflect swapped labels
-        old_alleleCounts = alleleCounts;
-        old_alleleCountsTotals = alleleCountsTotals;
-        for (int k=0; k<K; k++) {
-            alleleCounts[k] = old_alleleCounts[bestPermOrder[k]];
-            alleleCountsTotals[k] = old_alleleCountsTotals[bestPermOrder[k]];
+    }   // end loop over individuals
+    
+    // propose a new grouping and calculate likelihood
+    double logLike_new = 0;
+    double propose_logProb_new = 0;
+    for (int i=0; i<n; i++) {  // loop forwards through group_order
+        int ind = group_order[i]-1;
+        thisGroup = group[ind];
+        if (thisGroup==K1 || thisGroup==K2) {
+            
+            // recalculate probability of allocation to K1 or K2
+            d_logLikeConditional(ind, K1-1);   // recalculate logProbVec[K1]
+            d_logLikeConditional(ind, K2-1);   // recalculate logProbVec[K2]
+            logProbVecMax = (K1>K2) ? K1 : K2;
+            probVec[K1-1] = exp(beta*logProbVec[K1-1]-beta*logProbVecMax);
+            probVec[K2-1] = exp(beta*logProbVec[K2-1]-beta*logProbVecMax);
+            probVecSum = probVec[K1-1] + probVec[K2-1];
+            
+            // resample group allocation of individual ind
+            if (rbernoulli1(probVec[K1-1]/probVecSum)) {
+                group_propose[ind] = K1;
+            } else {
+                group_propose[ind] = K2;
+            }
+            
+            // calculate probability of new grouping
+            propose_logProb_new += log(probVec[group_propose[ind]-1]/probVecSum);
+            logLike_new += beta*logProbVec[group_propose[ind]-1];
+            
+            // add individual ind to allele counts
+            for (int l=0; l<loci; l++) {
+                for (int p=0; p<ploidy_vec[ind]; p++) {
+                    thisData1 = data[ind][l][p];
+                    if (thisData1!=0) {   // if not missing data
+                        alleleCounts[group_propose[ind]-1][l][thisData1-1]++;
+                        alleleCountsTotals[group_propose[ind]-1][l]++;
+                    }
+                }
+            }
+            
         }
+    }   // end loop over individuals
+    
+    // Metropolis-Hastings step. If accept then stick with new grouping, otherwise revert back
+    double MH_diff = (logLike_new - propose_logProb_new) - (logLike_old - propose_logProb_old);
+    double rand1 = runif1(0,1);
+    
+    test2++;
+    
+    if (log(rand1)<MH_diff) {
         
-        // update logQmatrix_ind_new to reflect swapped labels
-        logQmatrix_ind_old = logQmatrix_ind_new;
-        for (int i=0; i<n; i++) {
-            for (int k=0; k<K; k++) {
-                logQmatrix_ind_new[i][k] = logQmatrix_ind_old[i][bestPermOrder[k]];
+        test1++;
+        
+        // accept move
+        for (int ind=0; ind<n; ind++) {
+            thisGroup = group[ind];
+            if (thisGroup==K1 || thisGroup==K2) {
+                group[ind] = group_propose[ind];
             }
         }
         
-    }
-    
-}
-
-//------------------------------------------------
-// particle_noAdmixture::
-// add logQmatrix_ind_new to logQmatrix_ind_running
-void particle_noAdmixture::updateQmatrix() {
-    
-    for (int i=0; i<n; i++) {
-        for (int k=0; k<K; k++) {
-            logQmatrix_ind_running[i][k] = logSum(logQmatrix_ind_running[i][k], logQmatrix_ind_new[i][k]);
-        }
-    }
-}
-
-//------------------------------------------------
-// particle_noAdmixture::
-// store Qmatrix values
-void particle_noAdmixture::storeQmatrix() {
-    
-    // store individual-level Qmatrix
-    for (int i=0; i<n; i++) {
-        for (int k=0; k<K; k++) {
-            logQmatrix_ind[i][k] = logSum(logQmatrix_ind[i][k], logQmatrix_ind_new[i][k]);
-        }
+    } else {
+        
+        // reject move
+        for (int ind=0; ind<n; ind++) {
+            thisGroup = group[ind];
+            if (thisGroup==K1 || thisGroup==K2) {
+                
+                for (int l=0; l<loci; l++) {
+                    for (int p=0; p<ploidy_vec[ind]; p++) {
+                        thisData1 = data[ind][l][p];
+                        if (thisData1!=0) {   // if not missing data
+                            
+                            // subtract new group
+                            alleleCounts[group_propose[ind]-1][l][thisData1-1]--;
+                            alleleCountsTotals[group_propose[ind]-1][l]--;
+                            
+                            // reinstate old group
+                            alleleCounts[thisGroup-1][l][thisData1-1]++;
+                            alleleCountsTotals[thisGroup-1][l]++;
+                        }
+                    }
+                }
+                
+            }
+        }   // loop over individuals
+        
     }
     
 }
@@ -290,6 +351,7 @@ void particle_noAdmixture::d_logLikeGroup() {
 // draw allele frequencies given allele counts and lambda prior
 void particle_noAdmixture::drawFreqs() {
     
+    // dirichlet distributed allele frequencies
     double randSum;
     for (int k=0; k<K; k++) {
         for (int l=0; l<loci; l++) {
@@ -312,14 +374,16 @@ void particle_noAdmixture::drawFreqs() {
 // probability of data given grouping and allele frequencies
 void particle_noAdmixture::d_logLikeJoint() {
     
-    // calculate likelihood
+    // calculate likelihood given known allele frequencies
     logLikeJoint = 0;
     double running = 1.0;
     for (int i=0; i<n; i++) {
+        thisGroup = group[i];
         for (int l=0; l<loci; l++) {
             for (int p=0; p<ploidy_vec[i]; p++) {
-                if (data[i][l][p]!=0) {
-                    running *= alleleFreqs[group[i]-1][l][data[i][l][p]-1];
+                thisData1 = data[i][l][p];
+                if (thisData1!=0) {
+                    running *= alleleFreqs[thisGroup-1][l][thisData1-1];
                 }
                 if (running<UNDERFLO) {
                     logLikeJoint += log(running);
@@ -337,33 +401,185 @@ void particle_noAdmixture::d_logLikeJoint() {
 // conditional probability of ith individual from kth deme (output in log space)
 void particle_noAdmixture::d_logLikeConditional(int i, int k) {
     
-    // calculate conditional probability of data
+    // reset logprob to zero
     logProbVec[k] = 0;
-    int d, a, a_t;  // for making temporary copies of data, alleleCounts, and alleleCountsTotals respectively
-    double log_part2;
-    for (unsigned int l=0; l<loci; l++) {
-        a_t = alleleCountsTotals[k][l];
-        log_part2 = log_lookup[a_t][J[l]-1];
-        for (unsigned int p=0; p<ploidy_vec[i]; p++) {
-            d = data[i][l][p];
-            a = alleleCounts[k][l][d-1];
-            if (d!=0) {
-                if ((a<int(1e4)) && (a_t<int(1e4))) {
-                    logProbVec[k] += log_lookup_0[a]-log_part2;
-                } else {
-                    logProbVec[k] += log((a + lambda)/double(a_t + J[l]*lambda));
+    
+    // Likelihood calculation is highly tailored to different ploidy levels to increase speed and efficiency
+    
+    // IF DIPLOID
+    if (ploidy_vec[i]==2) {
+        
+        // loop over loci
+        for (unsigned int l=0; l<loci; l++) {
+            
+            // get both gene copies
+            thisData1 = data[i][l][0];
+            thisData2 = data[i][l][1];
+            
+            // if nethier gene copy missing then calculation is straightforward
+            if (thisData1!=0 && thisData2!=0) {
+                
+                // get current alleleCounts and alleleCountsTotals
+                thisAlleleCounts = alleleCounts[k][l][thisData1-1];
+                thisAlleleCountsTotals = alleleCountsTotals[k][l];
+                
+                // if homozygote at this locus
+                if (thisData1==thisData2) {
+                    
+                    // fast likelihood if within lookup table range
+                    if ((thisAlleleCounts+1)<int(1e4) && (thisAlleleCountsTotals+1)<int(1e4)) {
+                        logProbVec[k] += log_lookup_0[thisAlleleCounts] - log_lookup[thisAlleleCountsTotals][J[l]-1] + log_lookup_0[thisAlleleCounts+1] - log_lookup[thisAlleleCountsTotals+1][J[l]-1];
+                    }
+                    // otherwise slow likelihood
+                    else {
+                        logProbVec[k] += log((thisAlleleCounts + lambda)/double(thisAlleleCountsTotals + J[l]*lambda) * (thisAlleleCounts+1 + lambda)/double(thisAlleleCountsTotals+1 + J[l]*lambda));
+                    }
                 }
-                alleleCounts[k][l][d-1] ++;
-                a_t ++;
+                // if heterozygote at this locus
+                else {
+                    
+                    // fast likelihood if within lookup table range
+                    if (thisAlleleCounts<int(1e4) && thisAlleleCountsTotals<int(1e4)) {
+                        logProbVec[k] += log_lookup_0[thisAlleleCounts] - log_lookup[thisAlleleCountsTotals][J[l]-1];
+                    }
+                    // otherwise slow likelihood
+                    else {
+                        logProbVec[k] += log((thisAlleleCounts + lambda)/double(thisAlleleCountsTotals + J[l]*lambda));
+                    }
+                    
+                    // get allele counts at second locus
+                    thisAlleleCounts = alleleCounts[k][l][thisData2-1];
+                    
+                    // continue fast likelihood if within lookup table range
+                    if (thisAlleleCounts<int(1e4) && (thisAlleleCountsTotals+1)<int(1e4)) {
+                        logProbVec[k] += log_lookup_0[thisAlleleCounts] - log_lookup[thisAlleleCountsTotals+1][J[l]-1];
+                    }
+                    // otherwise slow likelihood
+                    else {
+                        logProbVec[k] += log((thisAlleleCounts + lambda)/double(thisAlleleCountsTotals+1 + J[l]*lambda));
+                    }
+                }
+            }   // end if neither gene copy missing
+            
+            // if one or other gene copy missing
+            else {
+                
+                // get current alleleCountsTotals
+                thisAlleleCountsTotals = alleleCountsTotals[k][l];
+                
+                // if first gene copy is present
+                if (thisData1!=0) {
+                    
+                    // get current alleleCounts
+                    thisAlleleCounts = alleleCounts[k][l][thisData1-1];
+                    
+                    // fast likelihood if within lookup table range
+                    if (thisAlleleCounts<int(1e4) && thisAlleleCountsTotals<int(1e4)) {
+                        logProbVec[k] += log_lookup_0[thisAlleleCounts] - log_lookup[thisAlleleCountsTotals][J[l]-1];
+                    }
+                    // otherwise slow likelihood
+                    else {
+                        logProbVec[k] += log((thisAlleleCounts + lambda)/double(thisAlleleCountsTotals + J[l]*lambda));
+                    }
+                }
+                // if second gene copy is present
+                if (thisData2!=0) {
+                    
+                    // get current alleleCounts
+                    thisAlleleCounts = alleleCounts[k][l][thisData2-1];
+                    
+                    // fast likelihood if within lookup table range
+                    if (thisAlleleCounts<int(1e4) && thisAlleleCountsTotals<int(1e4)) {
+                        logProbVec[k] += log_lookup_0[thisAlleleCounts] - log_lookup[thisAlleleCountsTotals][J[l]-1];
+                    }
+                    // otherwise slow likelihood
+                    else {
+                        logProbVec[k] += log((thisAlleleCounts + lambda)/double(thisAlleleCountsTotals + J[l]*lambda));
+                    }
+                }
+                
+            }   // end if at least one gene copy missing
+            
+        } // end loop over loci
+        
+    } // end if diploid
+    
+    // IF HAPLOID
+    else if (ploidy_vec[i]==1) {
+        
+        // loop over loci
+        for (unsigned int l=0; l<loci; l++) {
+            
+            // get single gene copy
+            thisData1 = data[i][l][0];
+            
+            // if gene copy not missing
+            if (thisData1!=0) {
+                
+                // get current alleleCounts and alleleCountsTotals
+                thisAlleleCounts = alleleCounts[k][l][thisData1-1];
+                thisAlleleCountsTotals = alleleCountsTotals[k][l];
+                
+                // fast likelihood if within lookup table range
+                if (thisAlleleCounts<int(1e4) && thisAlleleCountsTotals<int(1e4)) {
+                    logProbVec[k] += log_lookup_0[thisAlleleCounts] - log_lookup[thisAlleleCountsTotals][J[l]-1];
+                }
+                // otherwise slow likelihood
+                else {
+                    logProbVec[k] += log((thisAlleleCounts + lambda)/double(thisAlleleCountsTotals + J[l]*lambda));
+                }
+                
             }
-        }
-        for (unsigned int p=0; p<ploidy_vec[i]; p++) {
-            d = data[i][l][p];
-            if (d!=0) {
-                alleleCounts[k][l][d-1] --;
+            
+        } // end loop over loci
+        
+    } // end if haploid
+    
+    // IF PLOIDY>2
+    else {
+        
+        // loop over loci
+        for (unsigned int l=0; l<loci; l++) {
+            
+            // get current alleleCountsTotals
+            thisAlleleCountsTotals = alleleCountsTotals[k][l];
+            
+            // loop through all gene copies
+            for (unsigned int p=0; p<ploidy_vec[i]; p++) {
+                
+                // get this gene copy and check not missing
+                thisData1 = data[i][l][p];
+                if (thisData1!=0) {
+                    
+                    // get current allele counts
+                    thisAlleleCounts = alleleCounts[k][l][thisData1-1];
+                    
+                    // fast likelihood if within lookup table range
+                    if (thisAlleleCounts<int(1e4) && thisAlleleCountsTotals<int(1e4)) {
+                        logProbVec[k] += log_lookup_0[thisAlleleCounts] - log_lookup[thisAlleleCountsTotals][J[l]-1];
+                    }
+                    // otherwise slow likelihood
+                    else {
+                        logProbVec[k] += log((thisAlleleCounts + lambda)/double(thisAlleleCountsTotals + J[l]*lambda));
+                    }
+                    
+                    // increment allele counts
+                    alleleCounts[k][l][thisData1-1] ++;
+                    thisAlleleCountsTotals ++;
+                }
             }
-        }
-    }
+            // undo the temporary increment to allele counts used in likelihood calculation
+            for (unsigned int p=0; p<ploidy_vec[i]; p++) {
+                thisData1 = data[i][l][p];
+                if (thisData1!=0) {
+                    alleleCounts[k][l][thisData1-1] --;
+                }
+            }
+            
+        } // end loop over loci
+        
+    } // end if ploidy>2
+    
 }
 
 

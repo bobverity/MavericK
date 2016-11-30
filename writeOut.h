@@ -23,10 +23,6 @@
 std::ofstream safe_ofstream(std::string fileName, bool writeToFile, std::ofstream &logFileStream);
 
 //------------------------------------------------
-// initialise global objects with empty values
-void initialiseGlobals(globals &globals);
-
-//------------------------------------------------
 // open file streams that are common to all K
 void openFileStreams(globals &globals);
 

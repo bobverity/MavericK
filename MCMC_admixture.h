@@ -1,28 +1,28 @@
 //
 //  MavericK
-//  MCMC_TI_noAdmixture.h
+//  MCMC_admixture.h
 //
-//  Created: Bob on 22/06/2016
+//  Created: Bob on 06/11/2015
 //
 //  Distributed under the MIT software licence - see Notes.c file for details
 //
-//  Defines a class that can be used to carry out MCMC under the without-admixture model.
+//  Defines a class that can be used to carry out MCMC under the admixture model. The admixture parameter alpha can be defined as fixed or free to vary.
 //
 // ---------------------------------------------------------------------------
 
-#ifndef __Maverick1_0__MCMC_noAdmixture__
-#define __Maverick1_0__MCMC_noAdmixture__
+#ifndef __Maverick1_0__MCMC_admixture__
+#define __Maverick1_0__MCMC_admixture__
 
 #include <iostream>
 #include "globals.h"
 #include "probability.h"
 #include "misc.h"
 #include "Hungarian.h"
-#include "particle_noAdmixture.h"
+#include "particle_admixture.h"
 
 //------------------------------------------------
-// class containing all elements required for MCMC under no-admixture model
-class MCMC_noAdmixture {
+// class containing all elements required for MCMC under admixture model
+class MCMC_admixture {
     
 public:
     
@@ -32,6 +32,8 @@ public:
     int Kindex;
     int K;
     int n;
+    int loci;
+    std::vector<int> ploidy_vec;
     bool outputQmatrix_pop_on;
     int nPops;
     int burnin;
@@ -42,7 +44,7 @@ public:
     int rung1;
     int rung2;
     std::vector<double> betaVec;
-    std::vector<particle_noAdmixture> particleVec;
+    std::vector<particle_admixture> particleVec;
     std::vector<double> acceptanceRate;
     
     // likelihoods for each rung
@@ -53,10 +55,11 @@ public:
     double logLikeJoint_sumSquared;
     
     // Qmatrices
-    std::vector< std::vector<double> > logQmatrix_ind_running;
-    std::vector< std::vector<double> > logQmatrix_ind_update;
-    std::vector< std::vector<double> > Qmatrix_ind_update;
+    std::vector< std::vector< std::vector< std::vector<double> > > > logQmatrix_gene_running;
+    std::vector< std::vector< std::vector< std::vector<double> > > > logQmatrix_gene_update;
+    std::vector< std::vector< std::vector< std::vector<double> > > > Qmatrix_gene_update;
     
+    std::vector< std::vector< std::vector< std::vector<double> > > > Qmatrix_gene;
     std::vector< std::vector<double> > Qmatrix_ind;
     std::vector< std::vector<double> > Qmatrix_pop;
     
@@ -100,13 +103,13 @@ public:
     // PUBLIC FUNCTIONS
     
     // constructor
-    MCMC_noAdmixture(globals &globals, int _Kindex, int _rungs);
+    MCMC_admixture(globals &globals, int _Kindex, int _rungs);
     
     // perform MCMC
     void perform_MCMC(globals &globals);
     void MetropolisCoupling();
-    void updateQmatrix(particle_noAdmixture &particle, bool outOfBurnin);
-
+    void updateQmatrix(particle_admixture &particle, bool outOfBurnin);
+    
 };
 
 #endif

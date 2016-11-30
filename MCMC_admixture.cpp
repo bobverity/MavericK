@@ -1,8 +1,8 @@
 //
 //  MavericK
-//  MCMC_TI_noAdmixture.cpp
+//  MCMC_admixture.cpp
 //
-//  Created: Bob on 22/06/2016
+//  Created: Bob on 06/11/2015
 //
 //  Distributed under the MIT software licence - see Notes.c file for details
 //
@@ -10,19 +10,21 @@
 //
 // ---------------------------------------------------------------------------
 
-#include "MCMC_noAdmixture.h"
+#include "MCMC_admixture.h"
 
 using namespace std;
 
 //------------------------------------------------
-// MCMC_noAdmixture::
-// constructor for class containing all elements required for MCMC under no-admixture model
-MCMC_noAdmixture::MCMC_noAdmixture(globals &globals, int _Kindex, int _rungs) {
+// MCMC_admixture::
+// constructor for class containing all elements required for MCMC under admixture model
+MCMC_admixture::MCMC_admixture(globals &globals, int _Kindex, int _rungs) {
     
     // copy some values over from globals object
     Kindex = _Kindex;
     K = globals.Kmin+Kindex;
     n = globals.n;
+    loci = globals.loci;
+    ploidy_vec = globals.ploidy_vec;
     outputQmatrix_pop_on = globals.outputQmatrix_pop_on;
     nPops = int(globals.uniquePops.size());
     burnin = globals.mainBurnin;
@@ -32,11 +34,11 @@ MCMC_noAdmixture::MCMC_noAdmixture(globals &globals, int _Kindex, int _rungs) {
     rungs = _rungs;
     rungOrder = vector<int>(rungs);
     betaVec = vector<double>(rungs);
-    particleVec = vector<particle_noAdmixture>(rungs);
+    particleVec = vector<particle_admixture>(rungs);
     for (int rung=0; rung<rungs; rung++) {
         rungOrder[rung] = rung;
         betaVec[rung] = rung/double(rungs-1);
-        particleVec[rung] = particle_noAdmixture(globals, K, betaVec[rung]);
+        particleVec[rung] = particle_admixture(globals, K, globals.alpha[Kindex], globals.alphaPropSD[Kindex], betaVec[rung]);
     }
     acceptanceRate = vector<double>(rungs-1);
     
@@ -48,9 +50,14 @@ MCMC_noAdmixture::MCMC_noAdmixture(globals &globals, int _Kindex, int _rungs) {
     logLikeJoint_sumSquared = 0;
     
     // initialise Qmatrices
-    logQmatrix_ind_running = vector< vector<double> >(n, vector<double>(K));
-    logQmatrix_ind_update = vector< vector<double> >(n, vector<double>(K));
-    Qmatrix_ind_update = vector< vector<double> >(n, vector<double>(K));
+    logQmatrix_gene_running = vector< vector< vector< vector<double> > > >(n, vector< vector< vector<double> > >(loci));
+    for (int ind=0; ind<n; ind++) {
+        logQmatrix_gene_running[ind] = vector< vector< vector<double> > >(loci, vector< vector<double> >(ploidy_vec[ind], vector<double>(K)));
+    }
+    logQmatrix_gene_update = logQmatrix_gene_running;
+    Qmatrix_gene_update = logQmatrix_gene_running;
+    
+    Qmatrix_gene = logQmatrix_gene_running;
     Qmatrix_ind = vector< vector<double> >(n, vector<double>(K));
     Qmatrix_pop = vector< vector<double> >(nPops, vector<double>(K));
     
@@ -67,11 +74,6 @@ MCMC_noAdmixture::MCMC_noAdmixture(globals &globals, int _Kindex, int _rungs) {
     
     // harmonic mean estimator
     harmonic = NEGINF;
-    
-    // Structure estimator
-    structure_loglike_mean = 0;
-    structure_loglike_var = 0;
-    logEvidence_structure = 0;
     
     // TI point estimates for each rung
     TIpoint_mean = vector<double>(rungs);
@@ -95,26 +97,33 @@ MCMC_noAdmixture::MCMC_noAdmixture(globals &globals, int _Kindex, int _rungs) {
 }
 
 //------------------------------------------------
-// MCMC_noAdmixture::
-// perform complete MCMC under no-admixture model
-void MCMC_noAdmixture::perform_MCMC(globals &globals) {
+// MCMC_admixture::
+// perform complete MCMC under admixture model
+void MCMC_admixture::perform_MCMC(globals &globals) {
     
     // reset chains
     for (int rung=0; rung<rungs; rung++) {
-        particleVec[rung].reset();
+        particleVec[rung].reset(true);
     }
     
     // perform MCMC
     for (int rep=0; rep<(burnin+samples); rep++) {
         
-        // loop over rungs, updating group and likelihood
+        // loop over rungs
         for (int rung=0; rung<rungs; rung++) {
             
             // update group allocation of all individuals
             particleVec[rung].group_update();
             
+            // MH step to update group allocation at individual level. Improves mixing when alpha very small.
+            particleVec[rung].group_update_indLevel();
+            
             // MH step to update group allocation at deme level
-            particleVec[rung].group_update_Klevel();
+            //particleVec[rung].group_update_Klevel();
+            
+            // if alpha not fixed, update by Metropolis step
+            if (globals.fixAlpha_on==0)
+               particleVec[rung].alpha_update();
             
             // calculate group log-likelihood
             particleVec[rung].d_logLikeGroup();
@@ -126,16 +135,19 @@ void MCMC_noAdmixture::perform_MCMC(globals &globals) {
         // PRINT JUNK TO FILE
         for (int i=0; i<rungs; i++) {
             globals.junk_fileStream << particleVec[rungOrder[i]].logLikeGroup << "\t";
+            //globals.junk_fileStream << particleVec[rungOrder[i]].alpha << "\t";
         }
         globals.junk_fileStream << "\n";
         
         // focus on coldest rung (i.e. the real chain)
         rung1 = rungOrder[rungs-1];
         
+        //print(particleVec[rung1].alpha);
+        
         // fix label-switching problem and save Qmatrix
         updateQmatrix(particleVec[rung1], rep>=burnin);
         
-        // if no longer in burn-in phase
+        // if no longer in burnin phase
         if (rep>=burnin) {
             
             // add logLikeGroup to running sums
@@ -199,6 +211,20 @@ void MCMC_noAdmixture::perform_MCMC(globals &globals) {
     }
     logEvidence_TI_SE = sqrt(logEvidence_TI_var);
     
+    // calculate individual level Qmatrices
+    for (int ind=0; ind<n; ind++) {
+        for (int l=0; l<loci; l++) {
+            for (int p=0; p<ploidy_vec[ind]; p++) {
+                for (int k=0; k<K; k++) {
+                    Qmatrix_ind[ind][k] += Qmatrix_gene[ind][l][p][k];
+                }
+            }
+        }
+        for (int k=0; k<K; k++) {
+            Qmatrix_ind[ind][k] /= double(ploidy_vec[ind]*loci);
+        }
+    }
+    
     // calculate population level Qmatrices
     if (outputQmatrix_pop_on) {
         for (int i=0; i<n; i++) {
@@ -216,17 +242,20 @@ void MCMC_noAdmixture::perform_MCMC(globals &globals) {
 }
 
 //------------------------------------------------
-// MCMC_noAdmixture::
+// MCMC_admixture::
 // choose best permutation of labels using method of Stephens (2000)
-void MCMC_noAdmixture::updateQmatrix(particle_noAdmixture &particle, bool outOfBurnin) {
+void MCMC_admixture::updateQmatrix(particle_admixture &particle, bool outOfBurnin) {
     
     // calculate update to Qmatrix
     for (int ind=0; ind<n; ind++) {
-        particle.group_probs(ind);
-        for (int k=0; k<K; k++) {
-            // note that Qmatrix_ind_update does not equal exp(logQmatrix_ind_update). The line logQmatrix_ind_update[ind][k] = particle.logProbVec[k]- (log(particle.probVecSum) + particle.logProbVecMax) would be needed for this to be true. However, this constant has no effect on cost matrix calculation and so is omitted.
-            logQmatrix_ind_update[ind][k] = particle.logProbVec[k];
-            Qmatrix_ind_update[ind][k] = particle.probVec[k]/particle.probVecSum;
+        for (int l=0; l<loci; l++) {
+            for (int p=0; p<particle.ploidy_vec[ind]; p++) {
+                particle.group_probs(ind,l,p);
+                for (int k=0; k<K; k++) {
+                    logQmatrix_gene_update[ind][l][p][k] = particle.logProbVec[k];
+                    Qmatrix_gene_update[ind][l][p][k] = particle.probVec[k]/particle.probVecSum;
+                }
+            }
         }
     }
     
@@ -234,8 +263,12 @@ void MCMC_noAdmixture::updateQmatrix(particle_noAdmixture &particle, bool outOfB
     for (int k1=0; k1<K; k1++) {
         fill(costMat[k1].begin(), costMat[k1].end(), 0);
         for (int k2=0; k2<K; k2++) {
-            for (int i=0; i<n; i++) {
-                costMat[k1][k2] += Qmatrix_ind_update[i][labelOrder[k1]]*(logQmatrix_ind_update[i][labelOrder[k1]]-logQmatrix_ind_running[i][k2]);
+            for (int ind=0; ind<n; ind++) {
+                for (int l=0; l<loci; l++) {
+                    for (int p=0; p<ploidy_vec[ind]; p++) {
+                        costMat[k1][k2] += Qmatrix_gene_update[ind][l][p][labelOrder[k1]]*(logQmatrix_gene_update[ind][l][p][labelOrder[k1]]-logQmatrix_gene_running[ind][l][p][k2]);
+                    }
+                }
             }
         }
     }
@@ -254,18 +287,26 @@ void MCMC_noAdmixture::updateQmatrix(particle_noAdmixture &particle, bool outOfB
     }
     labelOrder = labelOrder_new;
     
-    // add logQmatrix_ind_new to logQmatrix_ind_running
-    for (int i=0; i<n; i++) {
-        for (int k=0; k<K; k++) {
-            logQmatrix_ind_running[i][k] = logSum(logQmatrix_ind_running[i][k], logQmatrix_ind_update[i][labelOrder[k]]);
+    // add logQmatrix_ind_new to logQmatrix_gene_running
+    for (int ind=0; ind<n; ind++) {
+        for (int l=0; l<loci; l++) {
+            for (int p=0; p<ploidy_vec[ind]; p++) {
+                for (int k=0; k<K; k++) {
+                    logQmatrix_gene_running[ind][l][p][k] = logSum(logQmatrix_gene_running[ind][l][p][k], logQmatrix_gene_update[ind][l][p][labelOrder[k]]);
+                }
+            }
         }
     }
     
     // store Qmatrix values
     if (outOfBurnin) {
-        for (int i=0; i<n; i++) {
-            for (int k=0; k<K; k++) {
-                Qmatrix_ind[i][k] += Qmatrix_ind_update[i][labelOrder[k]]/double(samples);
+        for (int ind=0; ind<n; ind++) {
+            for (int l=0; l<loci; l++) {
+                for (int p=0; p<ploidy_vec[ind]; p++) {
+                    for (int k=0; k<K; k++) {
+                        Qmatrix_gene[ind][l][p][k] += Qmatrix_gene_update[ind][l][p][labelOrder[k]]/double(samples);
+                    }
+                }
             }
         }
     }
@@ -273,9 +314,9 @@ void MCMC_noAdmixture::updateQmatrix(particle_noAdmixture &particle, bool outOfB
 }
 
 //------------------------------------------------
-// MCMC_noAdmixture::
+// MCMC_admixture::
 // swap chains in Metropolis step
-void MCMC_noAdmixture::MetropolisCoupling() {
+void MCMC_admixture::MetropolisCoupling() {
     
     // loop over rungs, starting with the hottest chain and moving to the cold chain. Each time propose a swap with a randomly chosen chain.
     for (int i1=0; i1<rungs; i1++) {
@@ -311,7 +352,7 @@ void MCMC_noAdmixture::MetropolisCoupling() {
             rungOrder[i2] = rung1;
             
             // update Metropolis coupling acceptance ratio
-            acceptanceRate[i1]++;
+            acceptanceRate[i1] ++;
             
         }
     }

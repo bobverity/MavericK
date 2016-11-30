@@ -37,18 +37,25 @@ public:
     double lambda;
     double beta;
     
-    // grouping and allele counts
+    // grouping
     std::vector<int> group;
+    std::vector<int> group_propose;
+    std::vector<int> group_order;
+    
+    // allele counts and frequencies
     std::vector< std::vector< std::vector<int> > > alleleCounts;
     std::vector< std::vector<int> > alleleCountsTotals;
     std::vector< std::vector< std::vector<double> > > alleleFreqs;
     
-    std::vector< std::vector< std::vector<int> > > old_alleleCounts;
-    std::vector< std::vector<int> > old_alleleCountsTotals;
+    // scalars for storing current status
+    int thisData1;
+    int thisData2;
+    int thisGroup;
+    int thisAlleleCounts;
+    int thisAlleleCountsTotals;
     
     // assignment probabilities
     std::vector<double> logProbVec;
-    double logProbVecSum;
     double logProbVecMax;
     std::vector<double> probVec;
     double probVecSum;
@@ -57,24 +64,9 @@ public:
     double logLikeGroup;
     double logLikeJoint;
     
-    // Qmatrices. logQmatrix_ind_old, logQmatrix_ind_new and logQmatrix_ind_running are used throughout MCMC (including burn-in phase) when solving label switching problem. Other Qmatrix objects are final outputs, and are only produced after burn-in phase.
-    std::vector< std::vector<double> > logQmatrix_ind_old;
-    std::vector< std::vector<double> > Qmatrix_ind_new;
-    std::vector< std::vector<double> > logQmatrix_ind_new;
-    std::vector< std::vector<double> > logQmatrix_ind_running;
-    
-    std::vector< std::vector<double> > logQmatrix_ind;
+    // Qmatrices
     std::vector< std::vector<double> > Qmatrix_ind;
-    
-    // objects for Hungarian algorithm
-    std::vector< std::vector<double> > costMat;
-    std::vector<int> bestPerm;
-    std::vector<int> bestPermOrder;
-    
-    std::vector<int>edgesLeft;
-    std::vector<int>edgesRight;
-    std::vector<int>blockedLeft;
-    std::vector<int>blockedRight;
+    std::vector< std::vector<double> > logQmatrix_ind;
     
     // PUBLIC FUNCTIONS
     
@@ -83,22 +75,19 @@ public:
     particle_noAdmixture(globals &globals, int _K, double _beta);
     
     // reset
-    void reset(bool reset_Qmatrix_running);
+    void reset();
     
     // update objects
     void group_update();
+    void group_probs(int ind);
+    void group_update_Klevel();
     void drawFreqs();
-    
-    // label switching
-    void chooseBestLabelPermutation(globals &globals);
-    void updateQmatrix();
-    void storeQmatrix();
     
     // likelihoods
     void d_logLikeConditional(int i, int k);
     void d_logLikeGroup();
     void d_logLikeJoint();
-
+    
 };
 
 #endif

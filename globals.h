@@ -203,4 +203,8 @@ public:
     
 };
 
+//------------------------------------------------
+// initialise global objects with empty values
+void initialiseGlobals(globals &globals);
+
 #endif

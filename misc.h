@@ -26,6 +26,11 @@
 #define UNDERFLO   1e-100
 
 //------------------------------------------------
+// define manual versions of positive and negative infinity
+#define INF   -log(double(0))
+#define NEGINF   log(double(0))
+
+//------------------------------------------------
 // basic sum over elements in a vector (templated for different data types).
 template<class TYPE>
 TYPE sum(std::vector<TYPE> &x) {

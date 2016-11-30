@@ -59,11 +59,11 @@ vector<int> augmentRight(int j, vector< vector<double> > &M, vector<int> &edgesR
 
 //------------------------------------------------
 // carry out Hungarian algorithm to find best matching given cost matrix M
-vector<int> hungarian(vector< vector<double> > &M, vector<int> &edgesLeft, vector<int> &edgesRight, vector<int> &blockedLeft, vector<int> &blockedRight, bool outputLog_on, ofstream &outputLog_fileStream) {
+vector<int> hungarian(vector< vector<double> > &M, vector<int> &edgesLeft, vector<int> &edgesRight, vector<int> &blockedLeft, vector<int> &blockedRight) {
     int n = int(M.size());
     
     // define maximum number of reps in Hungarian algorithm before aborting
-    int maxReps= int(1e6);
+    int maxReps = int(1e6);
     
     // initialise assignment objects
     int numberAssigned;
@@ -171,14 +171,5 @@ vector<int> hungarian(vector< vector<double> > &M, vector<int> &edgesLeft, vecto
         
     } // rep loop
     
-    cerrAndLog("\nError: failed to solve label switching problem. Hungarian algorithm failed to find best assignment within " + to_string((long long)maxReps) + string(" iterations given the following cost matrix:\n"), outputLog_on, outputLog_fileStream);
-    for (int i=0; i<n; i++) {
-        for (int j=0; j<n; j++) {
-            cerrAndLog(to_string((long long)M[i][j])+string(" "), outputLog_on, outputLog_fileStream);
-        }
-        cerrAndLog("\n", outputLog_on, outputLog_fileStream);
-    }
-    
     exit(1);
-    
 }

@@ -29,36 +29,40 @@ public:
     
     // basic quantities
     std::vector< std::vector< std::vector<int> > > data;
-    int thisData;
     int K;
     int n;
     int loci;
     std::vector<int> J;
     std::vector<int> ploidy_vec;
     double lambda;
-    double alpha;
     double beta;
+    
+    double alpha;
+    double alphaPropSD;
     
     // grouping
     std::vector< std::vector< std::vector<int> > > group;
-    int thisGroup;
+    std::vector< std::vector< std::vector<int> > > group_propose;
+    std::vector<int> group_order;
     
-    // allele and admix counts
+    // allele counts and frequencies
     std::vector< std::vector< std::vector<int> > > alleleCounts;
     std::vector< std::vector<int> > alleleCountsTotals;
     std::vector< std::vector< std::vector<double> > > alleleFreqs;
     
-    std::vector< std::vector< std::vector<int> > > old_alleleCounts;
-    std::vector< std::vector<int> > old_alleleCountsTotals;
-    
+    // admix counts and frequencies
     std::vector< std::vector<int> > admixCounts;
     std::vector<int> admixCountsTotals;
     std::vector< std::vector<double> > admixFreqs;
-    std::vector< std::vector<int> > old_admixCounts;
+    
+    // scalars for storing current status
+    int thisData;
+    int thisGroup;
+    int thisAlleleCounts;
+    int thisAlleleCountsTotals;
     
     // assignment probabilities
     std::vector<double> logProbVec;
-    double logProbVecSum;
     double logProbVecMax;
     std::vector<double> probVec;
     double probVecSum;
@@ -67,42 +71,27 @@ public:
     double logLikeGroup;
     double logLikeJoint;
     
-    // Qmatrices. logQmatrix_gene_old, logQmatrix_gene_new and logQmatrix_gene_running are used throughout MCMC (including burn-in phase) when solving label switching problem. Other Qmatrix objects are final outputs, and are only produced after burn-in phase.
-    std::vector< std::vector< std::vector< std::vector<double> > > > logQmatrix_gene_old;
-    std::vector< std::vector< std::vector< std::vector<double> > > > logQmatrix_gene_new;
-    std::vector< std::vector< std::vector< std::vector<double> > > > Qmatrix_gene_new;
-    std::vector< std::vector< std::vector< std::vector<double> > > > logQmatrix_gene_running;
-    
+    // Qmatrices
     std::vector< std::vector< std::vector< std::vector<double> > > > logQmatrix_gene;
     std::vector< std::vector< std::vector< std::vector<double> > > > Qmatrix_gene;
     
-    // objects for Hungarian algorithm
-    std::vector< std::vector<double> > costMat;
-    std::vector<int> bestPerm;
-    std::vector<int> bestPermOrder;
-    
-    std::vector<int>edgesLeft;
-    std::vector<int>edgesRight;
-    std::vector<int>blockedLeft;
-    std::vector<int>blockedRight;
     
     // PUBLIC FUNCTIONS
     
     // constructors
     particle_admixture();
-    particle_admixture(globals &globals, int _K, double _alpha, double _beta);
+    particle_admixture(globals &globals, int _K, double _alpha, double _alphaPropSD, double _beta);
     
     // reset
     void reset(bool reset_Qmatrix_running);
     
     // update objects
     void group_update();
+    void group_probs(int ind, int l, int p);
+    void group_update_indLevel();
+    void group_update_Klevel();
+    void alpha_update();
     void drawFreqs();
-    
-    // label switching
-    void chooseBestLabelPermutation(globals &globals);
-    void updateQmatrix();
-    void storeQmatrix();
     
     // likelihoods
     void d_logLikeConditional(int i, int k);
