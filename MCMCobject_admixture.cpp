@@ -14,6 +14,9 @@
 
 using namespace std;
 
+extern vector< vector<double> > log_lookup;
+extern vector<double> log_lookup_0;
+
 //------------------------------------------------
 // MCMCobject_admixture::
 // constructor for class containing all elements required for MCMC under admixture model
@@ -43,7 +46,7 @@ MCMCobject_admixture::MCMCobject_admixture(globals &globals, int _Kindex, int _b
     samples = _samples;
     thinning = _thinning;
     
-    log_lookup = globals.log_lookup;
+    //log_lookup = globals.log_lookup;
     
     linearGroup = vector<int>(geneCopies);
     group = vector< vector< vector<int> > >(n);
@@ -53,6 +56,7 @@ MCMCobject_admixture::MCMCobject_admixture(globals &globals, int _Kindex, int _b
             group[ind][l] = vector<int>(ploidy_vec[ind]);
         }
     }
+    group_propose = group;
     
     // initialise allele counts and frequencies
     alleleCounts = vector< vector< vector<int> > >(K);
@@ -339,17 +343,21 @@ void MCMCobject_admixture::group_update() {
                 }
                 
                 // calculate probability of this gene copy from all demes
+                thisData = data[ind][l][p];
                 probVecSum = 0;
                 for (int k=0; k<K; k++) {
-                    if (data[ind][l][p]==0) {
-                        probVec[k] = 1.0;
+                    if (thisData==0) {
+                        logProbVec[k] = 0;
                     } else {
-                        probVec[k] = double(alleleCounts[k][l][data[ind][l][p]-1]+lambda)/double(alleleCountsTotals[k][l]+J[l]*lambda);
-                        if (beta!=1.0) {
-                            probVec[k] = pow(probVec[k],beta);
+                        thisAlleleCounts = alleleCounts[k][l][thisData-1];
+                        thisAlleleCountsTotals = alleleCountsTotals[k][l];
+                        if ((thisAlleleCounts<int(1e4)) && (thisAlleleCountsTotals<int(1e4))) {
+                            logProbVec[k] = beta*log_lookup_0[thisAlleleCounts] - beta*log_lookup[thisAlleleCountsTotals][J[l]-1];
+                        } else {
+                            logProbVec[k] = beta*log((thisAlleleCounts + lambda)/double(thisAlleleCountsTotals + J[l]*lambda));
                         }
                     }
-                    probVec[k] *= double(admixCounts[ind][k]+alpha);  // (denominator of this expression is the same for all k, so is omitted)
+                    probVec[k] = double(admixCounts[ind][k]+alpha)*exp(logProbVec[k]);
                     probVecSum += probVec[k];
                 }
                 
@@ -382,9 +390,7 @@ void MCMCobject_admixture::group_update_indLevel() {
     double propose_logProb_new;
     double MH_diff;
     double rand1;
-    int d;
     int thisGroup;
-    vector< vector<int> > newGroup(loci);
     
     // loop over all individuals
     groupIndex=-1;
@@ -395,12 +401,12 @@ void MCMCobject_admixture::group_update_indLevel() {
         propose_logProb_old = 0;
         for (int l=0; l<loci; l++) {
             for (int p=0; p<ploidy_vec[ind]; p++) {
-                d = data[ind][l][p];
+                thisData = data[ind][l][p];
+                thisGroup = group[ind][l][p];
                 
                 // subtract this gene copy from allele counts and admix counts
-                if (d!=0) {   // if not missing data
-                    thisGroup = group[ind][l][p];
-                    alleleCounts[thisGroup-1][l][d-1]--;
+                if (thisData!=0) {   // if not missing data
+                    alleleCounts[thisGroup-1][l][thisData-1]--;
                     alleleCountsTotals[thisGroup-1][l]--;
                     
                     admixCounts[ind][thisGroup-1]--;
@@ -410,21 +416,24 @@ void MCMCobject_admixture::group_update_indLevel() {
                 // calculate probability of this gene copy from all demes
                 probVecSum = 0;
                 for (int k=0; k<K; k++) {
-                    if (d==0) {
-                        probVec[k] = 1.0;
+                    if (thisData==0) {
+                        logProbVec[k] = 0;
                     } else {
-                        probVec[k] = double(alleleCounts[k][l][d-1]+lambda)/double(alleleCountsTotals[k][l]+J[l]*lambda);
-                        if (beta!=1.0) {
-                            probVec[k] = pow(probVec[k],beta);
+                        thisAlleleCounts = alleleCounts[k][l][thisData-1];
+                        thisAlleleCountsTotals = alleleCountsTotals[k][l];
+                        if ((thisAlleleCounts<int(1e4)) && (thisAlleleCountsTotals<int(1e4))) {
+                            logProbVec[k] = beta*log_lookup_0[thisAlleleCounts] - beta*log_lookup[thisAlleleCountsTotals][J[l]-1];
+                        } else {
+                            logProbVec[k] = beta*log((thisAlleleCounts + lambda)/double(thisAlleleCountsTotals + J[l]*lambda));
                         }
                     }
-                    probVec[k] *= double(admixCounts[ind][k]+alpha);  // (denominator of this expression is the same for all k, so is omitted)
+                    probVec[k] = double(admixCounts[ind][k]+alpha)*exp(logProbVec[k]);
                     probVecSum += probVec[k];
                 }
                 
                 // calculate probability of chosen grouping
-                propose_logProb_old += log(probVec[group[ind][l][p]-1]/probVecSum);
-                logLike_old += log(probVec[group[ind][l][p]-1]);
+                propose_logProb_old += log(probVec[thisGroup-1]/probVecSum);
+                logLike_old += log(probVec[thisGroup-1]);
                 
             }
         }
@@ -433,36 +442,38 @@ void MCMCobject_admixture::group_update_indLevel() {
         logLike_new = 0;
         propose_logProb_new = 0;
         for (int l=0; l<loci; l++) {
-            newGroup[l] = vector<int>(ploidy_vec[ind]);
             for (int p=0; p<ploidy_vec[ind]; p++) {
-                d = data[ind][l][p];
+                thisData = data[ind][l][p];
                 
                 // calculate probability of this gene copy from all demes
                 probVecSum = 0;
                 for (int k=0; k<K; k++) {
-                    if (d==0) {
-                        probVec[k] = 1.0;
+                    if (thisData==0) {
+                        logProbVec[k] = 0;
                     } else {
-                        probVec[k] = double(alleleCounts[k][l][d-1]+lambda)/double(alleleCountsTotals[k][l]+J[l]*lambda);
-                        if (beta!=1.0) {
-                            probVec[k] = pow(probVec[k],beta);
+                        thisAlleleCounts = alleleCounts[k][l][thisData-1];
+                        thisAlleleCountsTotals = alleleCountsTotals[k][l];
+                        if ((thisAlleleCounts<int(1e4)) && (thisAlleleCountsTotals<int(1e4))) {
+                            logProbVec[k] = beta*log_lookup_0[thisAlleleCounts] - beta*log_lookup[thisAlleleCountsTotals][J[l]-1];
+                        } else {
+                            logProbVec[k] = beta*log((thisAlleleCounts + lambda)/double(thisAlleleCountsTotals + J[l]*lambda));
                         }
                     }
-                    probVec[k] *= double(admixCounts[ind][k]+alpha);  // (denominator of this expression is the same for all k, so is omitted)
+                    probVec[k] = double(admixCounts[ind][k]+alpha)*exp(logProbVec[k]);
                     probVecSum += probVec[k];
                 }
                 
                 // resample grouping
-                newGroup[l][p] = sample1(probVec, probVecSum);
+                group_propose[ind][l][p] = sample1(probVec, probVecSum);
                 
                 // calculate probability of new grouping
-                propose_logProb_new += log(probVec[newGroup[l][p]-1]/probVecSum);
-                logLike_new += log(probVec[newGroup[l][p]-1]);
+                propose_logProb_new += log(probVec[group_propose[ind][l][p]-1]/probVecSum);
+                logLike_new += log(probVec[group_propose[ind][l][p]-1]);
                 
                 // add this gene copy to allele counts and admix counts
-                if (d!=0) {   // if not missing data
-                    thisGroup = newGroup[l][p];
-                    alleleCounts[thisGroup-1][l][d-1]++;
+                if (thisData!=0) {   // if not missing data
+                    thisGroup = group_propose[ind][l][p];
+                    alleleCounts[thisGroup-1][l][thisData-1]++;
                     alleleCountsTotals[thisGroup-1][l]++;
                     
                     admixCounts[ind][thisGroup-1]++;
@@ -480,8 +491,8 @@ void MCMCobject_admixture::group_update_indLevel() {
             for (int l=0; l<loci; l++) {
                 for (int p=0; p<ploidy_vec[ind]; p++) {
                     groupIndex++;
-                    linearGroup[groupIndex] = newGroup[l][p];
-                    group[ind][l][p] = newGroup[l][p];
+                    linearGroup[groupIndex] = group_propose[ind][l][p];
+                    group[ind][l][p] = group_propose[ind][l][p];
                 }
             }
             
@@ -491,12 +502,12 @@ void MCMCobject_admixture::group_update_indLevel() {
             for (int l=0; l<loci; l++) {
                 for (int p=0; p<ploidy_vec[ind]; p++) {
                     groupIndex++;
-                    d = data[ind][l][p];
-                    if (d!=0) {   // if not missing data
+                    thisData = data[ind][l][p];
+                    if (thisData!=0) {   // if not missing data
                         
                         // subtract new group
-                        thisGroup = newGroup[l][p];
-                        alleleCounts[thisGroup-1][l][d-1]--;
+                        thisGroup = group_propose[ind][l][p];
+                        alleleCounts[thisGroup-1][l][thisData-1]--;
                         alleleCountsTotals[thisGroup-1][l]--;
                         
                         admixCounts[ind][thisGroup-1]--;
@@ -504,7 +515,7 @@ void MCMCobject_admixture::group_update_indLevel() {
                         
                         // reinstate old group
                         thisGroup = group[ind][l][p];
-                        alleleCounts[thisGroup-1][l][d-1]++;
+                        alleleCounts[thisGroup-1][l][thisData-1]++;
                         alleleCountsTotals[thisGroup-1][l]++;
                         
                         admixCounts[ind][thisGroup-1]++;
@@ -699,6 +710,7 @@ void MCMCobject_admixture::produceQmatrix() {
             } // p
         } // l
     } // ind
+    
 }
 
 //------------------------------------------------

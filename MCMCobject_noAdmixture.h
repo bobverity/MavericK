@@ -47,8 +47,6 @@ public:
     int samples;
     int thinning;
     
-    std::vector< std::vector<double> > log_lookup;
-    
     std::vector<int> group;
     std::vector< std::vector< std::vector<int> > > alleleCounts;
     std::vector< std::vector<int> > alleleCountsTotals;

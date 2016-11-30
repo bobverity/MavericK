@@ -14,6 +14,9 @@
 
 using namespace std;
 
+extern vector< vector<double> > log_lookup;
+extern vector<double> log_lookup_0;
+
 //------------------------------------------------
 // MCMCobject_noAdmixture::
 // constructor for class containing all elements required for MCMC under no-admixture model
@@ -36,8 +39,6 @@ MCMCobject_noAdmixture::MCMCobject_noAdmixture(globals &globals, int _Kindex, in
     burnin = _burnin;
     samples = _samples;
     thinning = _thinning;
-    
-    log_lookup = globals.log_lookup;
     
     group = vector<int>(n,1);
     
@@ -432,7 +433,7 @@ void MCMCobject_noAdmixture::d_logLikeConditional(int i, int k) {
             a = alleleCounts[k][l][d-1];
             if (d!=0) {
                 if ((a<int(1e4)) && (a_t<int(1e4))) {
-                    logProbVec[k] += log_lookup[a][1]-log_lookup[a_t][J[l]];
+                    logProbVec[k] += log_lookup_0[a]-log_lookup[a_t][J[l]-1];
                 } else {
                     logProbVec[k] += log((a + lambda)/double(a_t + J[l]*lambda));
                 }

@@ -31,10 +31,10 @@ void initialiseGlobals(globals &globals) {
     
     // create lookup table for log function
     int Jmax = *max_element(begin(globals.J),end(globals.J));
-    globals.log_lookup = vector< vector<double> >(int(1e4),vector<double>(Jmax+1));
+    globals.log_lookup = vector< vector<double> >(int(1e4),vector<double>(Jmax));
     for (int i=0; i<int(1e4); i++) {
-        for (int j=0; j<(Jmax+1); j++) {
-            globals.log_lookup[i][j] = log(double(i+j*globals.lambda));
+        for (int j=0; j<Jmax; j++) {
+            globals.log_lookup[i][j] = log(double(i+(j+1)*globals.lambda));
         }
     }
     

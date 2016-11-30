@@ -51,11 +51,15 @@ public:
     int samples;
     int thinning;
     
-    std::vector< std::vector<double> > log_lookup;
+    int thisData;
+    int thisAlleleCounts;
+    int thisAlleleCountsTotals;
     
     std::vector<int> linearGroup;
     std::vector< std::vector< std::vector<int> > > group;
+    std::vector< std::vector< std::vector<int> > > group_propose;
     int groupIndex;
+    
     std::vector< std::vector< std::vector<int> > > alleleCounts;
     std::vector< std::vector<int> > alleleCountsTotals;
     std::vector< std::vector< std::vector<double> > > alleleFreqs;
