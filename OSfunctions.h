@@ -15,14 +15,18 @@
 
 #ifdef _WIN32 // if Windows
     #include <direct.h>
-	#include "Windows_functions.h"
-
+	#define my_isnan _isnan
+	#define my_gamma approx_gamma
+	#define my_lgamma approx_lgamma
     #define DIRBREAK "\\"
     #define GETCWD _getcwd
 	#define isnan(x) _isnan(x)
 
 #else // if not Windows
     #include <unistd.h>
+	#define my_isnan std::isnan
+	#define my_gamma std::gamma
+	#define my_lgamma std::lgamma
     #define DIRBREAK "/"
     #define GETCWD getcwd
 #endif

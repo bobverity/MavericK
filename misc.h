@@ -16,7 +16,6 @@
 #include <iostream>
 #include <random>
 #include <algorithm>
-
 #include "probability.h"
 #include "readIn.h"
 #include "OSfunctions.h"
@@ -24,6 +23,10 @@
 //------------------------------------------------
 // define very small number for catching underflow problems
 #define UNDERFLO   1e-100
+
+//------------------------------------------------
+// round a double to nearest integer
+int my_round(double x);
 
 //------------------------------------------------
 // basic sum over elements in a vector (templated for different data types).
@@ -205,5 +208,13 @@ std::string process_nan(double x);
 //------------------------------------------------
 // calculate total autocorrelation on a vector of values, where total autocorrelation is defined as 1+2*(sum over lags until reach zero). This number is equivalent to the number of iterations needed to obtain one approximately independent draw (1 being the best). Note that this function calculates raw autocorrelation of the vector in increasingly large jumps, leading to fine resolution near lag1 and coarser resolution as we get further away.
 double calculateAutoCorr(std::vector<double> &v);
+
+//------------------------------------------------
+// numerical approximation to the gamma function
+double approx_gamma(double x);
+
+//------------------------------------------------
+// numerical approximation to the logarithm of the gamma function
+double approx_lgamma(double x);
 
 #endif

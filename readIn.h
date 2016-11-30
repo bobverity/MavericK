@@ -15,7 +15,6 @@
 
 #include <iostream>
 #include <sstream>
-
 #include "globals.h"
 #include "misc.h"
 #include "OSfunctions.h"

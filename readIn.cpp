@@ -847,7 +847,7 @@ void readData(globals &globals) {
         for (int i=0; i<int(ploidy_raw.size()); i++) {
             double param_double=0;
             istringstream(ploidy_raw[i]) >> param_double;
-            if (round(double(param_double))==param_double && round(double(param_double))>=0) {
+            if (my_round(double(param_double))==param_double && my_round(double(param_double))>=0) {
                 ploidy_raw_int[i] = int(param_double);
             } else {
                 cerrAndLog("\nError: all ploidy values in data file must be positive integers\n", globals.outputLog_on, globals.outputLog_fileStream);
