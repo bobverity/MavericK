@@ -213,7 +213,7 @@ void particle_admixture::group_probs(int ind, int l, int p) {
             thisAlleleCounts = alleleCounts[k][l][thisData-1];
             thisAlleleCountsTotals = alleleCountsTotals[k][l];
             if ((thisAlleleCounts<int(1e4)) && (thisAlleleCountsTotals<int(1e4))) {
-                logProbVec[k] = beta*log_lookup_0[thisAlleleCounts] - log_lookup[thisAlleleCountsTotals][J[l]-1];
+                logProbVec[k] = beta*log_lookup_0[thisAlleleCounts] - beta*log_lookup[thisAlleleCountsTotals][J[l]-1];
             } else {
                 logProbVec[k] = beta*log((thisAlleleCounts + lambda)/double(thisAlleleCountsTotals + J[l]*lambda));
             }
