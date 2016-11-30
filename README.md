@@ -11,6 +11,9 @@ To all C++ coders out there - if you can see any obvious efficiency gains that c
 
 ## Version History
 
+30.11.2016  **Version1.0.4 released**<br>
+30.11.2016  Increased speed under admixture model via look-up table.
+
 29.06.2016  **Version1.0.3 released**<br>
 29.06.2016  Improved cross-platform compatibility. Fixed clock time, which previously gave incorrect runtime estimates.
 
