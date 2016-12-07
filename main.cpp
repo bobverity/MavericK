@@ -46,7 +46,7 @@ int main(int argc, const char * argv[])
     cout << "------------------------------------------\n";
     cout << "               MAVERICK\n";
     cout << "by Robert Verity and Richard A. Nichols\n";
-    cout << "    Version 1.0.4 (30 November 2016)\n";
+    cout << "    Version 1.0.4 (30 December 2016)\n";
     cout << "accessed " << ctime(&ctt);
     cout << "------------------------------------------\n\n";
 
@@ -97,7 +97,7 @@ int main(int argc, const char * argv[])
         globals.outputLog_fileStream << "------------------------------------------\n";
         globals.outputLog_fileStream << "               MAVERICK\n";
         globals.outputLog_fileStream << "by Robert Verity and Richard A. Nichols\n";
-        globals.outputLog_fileStream << "    Version 1.0.4 (30 November 2016)\n";
+        globals.outputLog_fileStream << "    Version 1.0.4 (07 December 2016)\n";
 		globals.outputLog_fileStream << "accessed " << ctime(&ctt);
         globals.outputLog_fileStream << "------------------------------------------\n\n";
         
@@ -309,7 +309,7 @@ int main(int argc, const char * argv[])
     
     // end program
 	time(&tend);
-    int duration = difftime(tend, tstart);
+    double duration = difftime(tend, tstart);
 	ostringstream duration_ss;
 	duration_ss << "Program completed in approximately " << duration << " seconds\n";
 	string duration_s = duration_ss.str();
