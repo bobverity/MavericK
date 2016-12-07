@@ -254,7 +254,7 @@ void MCMC_noAdmixture::updateQmatrix(particle_noAdmixture &particle, bool outOfB
     }
     labelOrder = labelOrder_new;
     
-    // add logQmatrix_ind_new to logQmatrix_ind_running
+    // add logQmatrix_ind_update to logQmatrix_ind_running
     for (int i=0; i<n; i++) {
         for (int k=0; k<K; k++) {
             logQmatrix_ind_running[i][k] = logSum(logQmatrix_ind_running[i][k], logQmatrix_ind_update[i][labelOrder[k]]);

@@ -393,7 +393,6 @@ void particle_noAdmixture::d_logLikeJoint() {
         }
     }
     logLikeJoint += log(running);
-    
 }
 
 //------------------------------------------------
@@ -427,7 +426,7 @@ void particle_noAdmixture::d_logLikeConditional(int i, int k) {
                 if (thisData1==thisData2) {
                     
                     // fast likelihood if within lookup table range
-                    if ((thisAlleleCounts+1)<int(1e4) && (thisAlleleCountsTotals+1)<int(1e4)) {
+                    if (false && (thisAlleleCounts+1)<int(1e4) && (thisAlleleCountsTotals+1)<int(1e4)) {
                         logProbVec[k] += log_lookup_0[thisAlleleCounts] - log_lookup[thisAlleleCountsTotals][J[l]-1] + log_lookup_0[thisAlleleCounts+1] - log_lookup[thisAlleleCountsTotals+1][J[l]-1];
                     }
                     // otherwise slow likelihood
@@ -439,7 +438,7 @@ void particle_noAdmixture::d_logLikeConditional(int i, int k) {
                 else {
                     
                     // fast likelihood if within lookup table range
-                    if (thisAlleleCounts<int(1e4) && thisAlleleCountsTotals<int(1e4)) {
+                    if (false && thisAlleleCounts<int(1e4) && thisAlleleCountsTotals<int(1e4)) {
                         logProbVec[k] += log_lookup_0[thisAlleleCounts] - log_lookup[thisAlleleCountsTotals][J[l]-1];
                     }
                     // otherwise slow likelihood
@@ -451,7 +450,7 @@ void particle_noAdmixture::d_logLikeConditional(int i, int k) {
                     thisAlleleCounts = alleleCounts[k][l][thisData2-1];
                     
                     // continue fast likelihood if within lookup table range
-                    if (thisAlleleCounts<int(1e4) && (thisAlleleCountsTotals+1)<int(1e4)) {
+                    if (false && thisAlleleCounts<int(1e4) && (thisAlleleCountsTotals+1)<int(1e4)) {
                         logProbVec[k] += log_lookup_0[thisAlleleCounts] - log_lookup[thisAlleleCountsTotals+1][J[l]-1];
                     }
                     // otherwise slow likelihood

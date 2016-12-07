@@ -14,14 +14,11 @@
  
  Ideas for how to speed up and reorganise program:
  
- - Robbins-Monro update of alpha proposal standard deviation, or...
- - move to gamma prior on alpha
  - data and groupings start from index 0
  - think about listing order of e.g. alleleCounts[k][l][j]. Could this order be rearranged to make faster inside likelihood calculation?
  - fancy mixture modelling techniques, such as linking over K
  - do I need alleleCountsTotals at all? (Yes, I think so). What about admixCountsTotals?
  - currently I am temporarily adding and subtracting elements when calculating likelihood, then adding again once K chosen. Avoid add-subtract-add step if K does not change? Under admixture model?
- - get rid of MCMC class? Replace with simple void functions?
  
 */
 // NOTE - now using shortcut method of label fixing, in which condition probabilities within an iteration are not recalculated pior to using Stephens' method.
