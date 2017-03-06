@@ -124,10 +124,10 @@ void MCMC_noAdmixture::perform_MCMC(globals &globals) {
         MetropolisCoupling();
         
         // PRINT JUNK TO FILE
-        for (int i=0; i<rungs; i++) {
-            globals.junk_fileStream << particleVec[rungOrder[i]].logLikeGroup << "\t";
-        }
-        globals.junk_fileStream << "\n";
+        //for (int i=0; i<rungs; i++) {
+        //    globals.junk_fileStream << particleVec[rungOrder[i]].logLikeGroup << "\t";
+        //}
+        //globals.junk_fileStream << "\n";
         
         // focus on coldest rung (i.e. the real chain)
         rung1 = rungOrder[rungs-1];
