@@ -71,6 +71,7 @@ globals::globals() {
     parameterStrings["popCol_on"] = pair<string,int>("false",0); popCol_on = false;
     parameterStrings["ploidyCol_on"] = pair<string,int>("false",0); ploidyCol_on = false;
     parameterStrings["ploidy"] = pair<string,int>("2",0); ploidy = 2;
+    parameterStrings["dataFormat"] = pair<string,int>("1",0); dataFormat = 1;
     parameterStrings["missingData"] = pair<string,int>("-9",0); missingData = "-9";
     
     parameterStrings["Kmin"] = pair<string,int>("1",0); Kmin = 1;

@@ -103,6 +103,7 @@ public:
     bool popCol_on;
     bool ploidyCol_on;
     int ploidy;
+    int dataFormat;
     std::string missingData;
     
     int Kmin;

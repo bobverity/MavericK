@@ -143,7 +143,7 @@ void readParameters(globals &globals) {
     globals.parameters_fileStream.close();
     
     // extract paths from file
-    for (int i=1; i<int(params.size()); i++) {
+    for (int i=0; i<int(params.size()); i++) {
         
         if (params[i]=="outputRoot" && i+1<int(params.size()))
             globals.outputRoot_fileName = params[i+1];
@@ -202,7 +202,7 @@ void readParameters(globals &globals) {
     }
     
     // extract parameter values (as strings) from file
-    for (int i=1; i<int(params.size()); i++) {
+    for (int i=0; i<int(params.size()); i++) {
         
         if (params[i]=="headerRow_on" && i+1<int(params.size()))
             globals.parameterStrings["headerRow_on"] = pair<string,int>(params[i+1],1);
@@ -215,6 +215,9 @@ void readParameters(globals &globals) {
         
         if (params[i]=="ploidy" && i+1<int(params.size()))
             globals.parameterStrings["ploidy"] = pair<string,int>(params[i+1],1);
+        
+        if (params[i]=="dataFormat" && i+1<int(params.size()))
+            globals.parameterStrings["dataFormat"] = pair<string,int>(params[i+1],1);
         
         if (params[i]=="missingData" && i+1<int(params.size()))
             globals.parameterStrings["missingData"] = pair<string,int>(params[i+1],1);
@@ -355,7 +358,7 @@ void readArgument(string argName, globals &globals, int argc, const char * argv[
 void readCommandLine(globals &globals, int argc, const char * argv[]) {
     
     // replace file names and paths with user-defined arguments
-    for (int i=1; i<argc; i++) {
+    for (int i=0; i<argc; i++) {
         readPath("-outputRoot", globals.outputRoot_fileName, argc, argv, i);
         readPath("-data", globals.data_fileName, argc, argv, i);
         readPath("-outputLog", globals.outputLog_fileName, argc, argv, i);
@@ -397,11 +400,12 @@ void readCommandLine(globals &globals, int argc, const char * argv[]) {
     globals.outputMaxLike_admixFreqs_filePath = globals.outputRoot_filePath + globals.outputMaxLike_admixFreqs_fileName;
     
     // replace parameter values (as strings) with user-defined arguments
-    for (int i=1; i<argc; i++) {
+    for (int i=0; i<argc; i++) {
         readArgument("headerRow_on", globals, argc, argv, i);
         readArgument("popCol_on", globals, argc, argv, i);
         readArgument("ploidyCol_on", globals, argc, argv, i);
         readArgument("ploidy", globals, argc, argv, i);
+        readArgument("dataFormat", globals, argc, argv, i);
         readArgument("missingData", globals, argc, argv, i);
         readArgument("Kmin", globals, argc, argv, i);
         readArgument("Kmax", globals, argc, argv, i);
@@ -474,6 +478,13 @@ void checkParameters(globals &globals, int i) {
                 // check that integer greater than 0
                 checkInteger(it->second.first, globals.ploidy, it->first, globals.outputLog_on, globals.outputLog_fileStream);
                 checkGrZero(it->first, globals.ploidy, globals.outputLog_on, globals.outputLog_fileStream);
+            }
+            if (it->first=="dataFormat") {
+                writeToFile("  dataFormat = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
+                
+                // check that integer greater than 0
+                checkInteger(it->second.first, globals.dataFormat, it->first, globals.outputLog_on, globals.outputLog_fileStream);
+                checkGrZero(it->first, globals.dataFormat, globals.outputLog_on, globals.outputLog_fileStream);
             }
             if (it->first=="missingData") {
                 writeToFile("  missingData = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
@@ -809,6 +820,9 @@ void readData(globals &globals) {
         coutAndLog("  column "+to_string((long long)pop_startRead+1)+" = population of origin\n", globals.outputLog_on, globals.outputLog_fileStream);
     if (ploidy_startRead!=-1)
         coutAndLog("  column "+to_string((long long)ploidy_startRead+1)+" = ploidy\n", globals.outputLog_on, globals.outputLog_fileStream);
+    if (globals.dataFormat==2) {
+        coutAndLog("  dataFormat = single line per individual\n", globals.outputLog_on, globals.outputLog_fileStream);
+    }
     
     // split rawData into special columns and data matrix
     vector<string> indLabels_raw, pop_raw, ploidy_raw;
@@ -838,9 +852,6 @@ void readData(globals &globals) {
         rawData.push_back(rawData_line);
     }
     
-    // finally define number of loci
-    globals.loci = int(rawData[0].size());
-    
     // convert ploidy labels into integer format
     vector<int> ploidy_raw_int(rawEntries.size(),globals.ploidy);
     if (globals.ploidyCol_on) {
@@ -856,10 +867,57 @@ void readData(globals &globals) {
         }
     }
     
+    // single-line format
+    if (globals.dataFormat==2) {
+        
+        // copy current raw objects
+        vector<string> indLabels_copy = indLabels_raw;
+        vector<string> pop_copy = pop_raw;
+        vector<int> ploidy_int_copy = ploidy_raw_int;
+        vector< vector<string> > rawData_copy = rawData;
+        
+        // clear raw objects
+        indLabels_raw.clear();
+        pop_raw.clear();
+        ploidy_raw_int.clear();
+        
+        // expand rawData as needed
+        int ploidy_int_copy_sum = sum(ploidy_int_copy);
+        rawData = vector< vector<string> >(ploidy_int_copy_sum);
+        
+        int startRow = 0;
+        for (int i=0; i<int(rawData_copy.size()); i++) {
+            // check that sufficient entries given ploidy
+            if ( (rawData_copy[i].size()%ploidy_int_copy[i])!=0 ) {
+                cerrAndLog("\nError: number of elements in single-line format not compatible with given ploidy\n", globals.outputLog_on, globals.outputLog_fileStream);
+            }
+            // add to indLabels and pop
+            for (int j=0; j<ploidy_int_copy[i]; j++) {
+                indLabels_raw.push_back(indLabels_copy[i]);
+                pop_raw.push_back(pop_copy[i]);
+                ploidy_raw_int.push_back(ploidy_int_copy[i]);
+            }
+            // add data
+            int loci = int(rawData_copy[i].size()/ploidy_int_copy[i]);
+            int j2=0;
+            for (int j=0; j<loci; j++) {
+                for (int i2=0; i2<ploidy_int_copy[i]; i2++) {
+                    rawData[startRow+i2].push_back(rawData_copy[i][j2]);
+                    j2++;
+                }
+            }
+            startRow += ploidy_int_copy[i];
+        }
+        
+    }
+    
+    // define number of loci
+    globals.loci = int(rawData[0].size());
+    
     // check that ploidy values make sense. Ploidy must be either defined on the first row of an individual (ploidy_format==1), or defined equally for all rows of an individual (ploidy_format==2).
     int thisPloidy=0, countDown=0, ploidy_format=0;
     bool ploidyError = false;
-    for (int i=0; i<int(rawEntries.size()); i++) {
+    for (int i=0; i<int(rawData.size()); i++) {
         // if new individual
         if (countDown==0) {
             if (ploidy_raw_int[i]!=0) {
@@ -903,7 +961,7 @@ void readData(globals &globals) {
         string thisPop;
         int pop_format=0;
         bool popError = false;
-        for (int i=0; i<int(rawEntries.size()); i++) {
+        for (int i=0; i<int(rawData.size()); i++) {
             // if new individual
             if (countDown==0) {
                 thisPop = pop_raw[i];
@@ -955,7 +1013,7 @@ void readData(globals &globals) {
     // reformat data into simple list: data[individual][locus][gene copy]. Recode values to simple list of integers, with 0 meaning missing data. Keep record of missing data elements in data_missing (1=missing, 0=present). Store indLabels_vec, pop_vec, ploidy_vec and missing_vec values.
     countDown=0;
     int ind=-1, gene_copy=0;
-    for (int i=0; i<int(rawEntries.size()); i++) {
+    for (int i=0; i<int(rawData.size()); i++) {
         // if new individual
         if (countDown==0) {
             ind++;
