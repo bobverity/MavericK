@@ -12,8 +12,8 @@ OVERALL PROGRAM STRUCTURE
  
 - The overall flow of the program is specified in main.cpp. First, global parameters are defined (given default values) in a single "globals" object. Then a handful of input arguments are processed - just those needed to locate the parameters.txt file. This file is then located and read in, and finally remaining command-line arguments are processed. Therefore the order of precedence is: default values, which are overwritten by parameters in the parameters.txt file, which are overwritten by parameters specified on the command line.
 - The data.txt file is then read in, and certain checks are carried out to ensure that the combination of data and parameters makes sense.
-- The main loop of the program over values of K then begins. In each iteration there are various different sorts of analysis carried out (for example exhaustive analysis, thermodynamic integration etc.). The main MCMC loop is compulsory, but all other types of analysis are optional.
-- For MCMC analyses (either the ordinary MCMC or the thermodynamic integral MCMC, and either with- or without-admixture) a distinct MCMCobject class is defined. This class contains all functions and variables needed to carry out the MCMC. Final results are saved back into the globals object.
+- The main loop of the program over values of K then begins. In version 1.1, unlike previous versions, only the exhaustive and thermodynamic MCMC approaches are used.
+- For MCMC analyses (either with- or without-admixture) a distinct MCMCobject class is defined. This class contains all functions and variables needed to carry out the MCMC. Final results are saved back into the globals object.
 - Where possible, outputs are produced at each iteration of the main loop (for each K) and results are flushed. This means that outputs can be viewed even when the program has not completely finished. Some outputs (such as normalised evidence values) can only be produced after the main loop.
 - This code is designed to compile on both Windows and Mac. Operating-system specific functions are contained in the header file "OSfunctions.h"
 

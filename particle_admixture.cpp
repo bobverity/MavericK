@@ -17,9 +17,6 @@ using namespace std;
 extern vector< vector<double> > log_lookup;
 extern vector<double> log_lookup_0;
 
-extern int test1;
-extern int test2;
-
 //------------------------------------------------
 // particle_admixture::
 // default constructor for class
@@ -28,7 +25,7 @@ particle_admixture::particle_admixture(){};
 //------------------------------------------------
 // particle_admixture::
 // informed constructor for class
-particle_admixture::particle_admixture(globals &globals, int _K, double _alpha, double _alphaPropSD, double _beta) {
+particle_admixture::particle_admixture(globals &globals, int _K, double _alpha, double _beta_raised) {
     
     // copy some values over from globals object and arguments
     data = globals.data;
@@ -38,9 +35,8 @@ particle_admixture::particle_admixture(globals &globals, int _K, double _alpha, 
     J = globals.J;
     ploidy_vec = globals.ploidy_vec;
     lambda = globals.lambda;
-    beta = _beta;
+    beta_raised = _beta_raised;
     alpha = _alpha;
-    alphaPropSD = _alphaPropSD;
     
     // initialise grouping array
     group = vector< vector< vector<int> > >(n, vector< vector<int> >(loci));
@@ -123,13 +119,13 @@ void particle_admixture::reset(bool reset_Qmatrix_running) {
     for (int ind=0; ind<n; ind++) {
         for (int l=0; l<loci; l++) {
             for (int p=0; p<ploidy_vec[ind]; p++) {
-                thisData = data[ind][l][p];
-                if (thisData!=0) {
-                    thisGroup = group[ind][l][p];
-                    alleleCounts[thisGroup-1][l][thisData-1]++;
-                    alleleCountsTotals[thisGroup-1][l]++;
+                int this_data = data[ind][l][p];
+                if (this_data!=0) {
+                    int this_group = group[ind][l][p];
+                    alleleCounts[this_group-1][l][this_data-1]++;
+                    alleleCountsTotals[this_group-1][l]++;
                     
-                    admixCounts[ind][thisGroup-1]++;
+                    admixCounts[ind][this_group-1]++;
                     admixCountsTotals[ind]++;
                 }
             }
@@ -163,33 +159,33 @@ void particle_admixture::group_update() {
     for (int ind=0; ind<n; ind++) {
         for (int l=0; l<loci; l++) {
             for (int p=0; p<ploidy_vec[ind]; p++) {
-                thisGroup = group[ind][l][p];
-                thisData = data[ind][l][p];
+                int this_group = group[ind][l][p];
+                int this_data = data[ind][l][p];
                 
                 // subtract this gene copy from allele counts and admix counts
-                if (thisData!=0) {   // if not missing data
-                    alleleCounts[thisGroup-1][l][thisData-1]--;
-                    alleleCountsTotals[thisGroup-1][l]--;
+                if (this_data!=0) {   // if not missing data
+                    alleleCounts[this_group-1][l][this_data-1]--;
+                    alleleCountsTotals[this_group-1][l]--;
                     
-                    admixCounts[ind][thisGroup-1]--;
+                    admixCounts[ind][this_group-1]--;
                     admixCountsTotals[ind]--;
                 }
                 
                 // resample group allocation of individual ind
-                if (beta==0) {    // special case if beta==0 (draw from prior)
-                    thisGroup = sample2(1,K);
+                if (beta_raised==0) {    // special case if beta_raised==0 (draw from prior)
+                    this_group = sample2(1,K);
                 } else {
                     group_probs(ind,l,p);
-                    thisGroup = sample1(probVec, probVecSum);
+                    this_group = sample1(probVec, probVecSum);
                 }
-                group[ind][l][p] = thisGroup;
+                group[ind][l][p] = this_group;
                 
                 // add this gene copy to allele counts and admix counts
-                if (thisData!=0) {   // if not missing data
-                    alleleCounts[thisGroup-1][l][thisData-1]++;
-                    alleleCountsTotals[thisGroup-1][l]++;
+                if (this_data!=0) {   // if not missing data
+                    alleleCounts[this_group-1][l][this_data-1]++;
+                    alleleCountsTotals[this_group-1][l]++;
                     
-                    admixCounts[ind][thisGroup-1]++;
+                    admixCounts[ind][this_group-1]++;
                     admixCountsTotals[ind]++;
                 }
                 
@@ -204,18 +200,18 @@ void particle_admixture::group_update() {
 // calculate conditional probability of this gene copy coming from each deme
 void particle_admixture::group_probs(int ind, int l, int p) {
     
-    thisData = data[ind][l][p];
+    int this_data = data[ind][l][p];
     probVecSum = 0;
     for (int k=0; k<K; k++) {
-        if (thisData==0) {
+        if (this_data==0) {
             logProbVec[k] = 0;
         } else {
-            thisAlleleCounts = alleleCounts[k][l][thisData-1];
-            thisAlleleCountsTotals = alleleCountsTotals[k][l];
-            if ((thisAlleleCounts<int(1e4)) && (thisAlleleCountsTotals<int(1e4))) {
-                logProbVec[k] = beta*log_lookup_0[thisAlleleCounts] - beta*log_lookup[thisAlleleCountsTotals][J[l]-1];
+            int this_allele_counts = alleleCounts[k][l][this_data-1];
+            int this_allele_counts_totals = alleleCountsTotals[k][l];
+            if ((this_allele_counts<int(1e4)) && (this_allele_counts_totals<int(1e4))) {
+                logProbVec[k] = beta_raised*log_lookup_0[this_allele_counts] - beta_raised*log_lookup[this_allele_counts_totals][J[l]-1];
             } else {
-                logProbVec[k] = beta*log((thisAlleleCounts + lambda)/double(thisAlleleCountsTotals + J[l]*lambda));
+                logProbVec[k] = beta_raised*log((this_allele_counts + lambda)/double(this_allele_counts_totals + J[l]*lambda));
             }
         }
         probVec[k] = double(admixCounts[ind][k]+alpha)*exp(logProbVec[k]);
@@ -244,15 +240,15 @@ void particle_admixture::group_update_indLevel() {
         propose_logProb_old = 0;
         for (int l=0; l<loci; l++) {
             for (int p=0; p<ploidy_vec[ind]; p++) {
-                thisData = data[ind][l][p];
-                thisGroup = group[ind][l][p];
+                int this_data = data[ind][l][p];
+                int this_group = group[ind][l][p];
                 
                 // subtract this gene copy from allele counts and admix counts
-                if (thisData!=0) {   // if not missing data
-                    alleleCounts[thisGroup-1][l][thisData-1]--;
-                    alleleCountsTotals[thisGroup-1][l]--;
+                if (this_data!=0) {   // if not missing data
+                    alleleCounts[this_group-1][l][this_data-1]--;
+                    alleleCountsTotals[this_group-1][l]--;
                     
-                    admixCounts[ind][thisGroup-1]--;
+                    admixCounts[ind][this_group-1]--;
                     admixCountsTotals[ind]--;
                 }
                 
@@ -260,8 +256,8 @@ void particle_admixture::group_update_indLevel() {
                 group_probs(ind,l,p);
                 
                 // calculate probability of chosen grouping
-                propose_logProb_old += log(probVec[thisGroup-1]) - log(probVecSum);
-                logLike_old += log(probVec[thisGroup-1]);
+                propose_logProb_old += log(probVec[this_group-1]) - log(probVecSum);
+                logLike_old += log(probVec[this_group-1]);
                 
             }
         }
@@ -271,25 +267,25 @@ void particle_admixture::group_update_indLevel() {
         propose_logProb_new = 0;
         for (unsigned int l=0; l<loci; l++) {
             for (unsigned int p=0; p<ploidy_vec[ind]; p++) {
-                thisData = data[ind][l][p];
+                int this_data = data[ind][l][p];
                 
                 // calculate probability of this gene copy from all demes
                 group_probs(ind,l,p);
                 
                 // resample grouping
-                thisGroup = sample1(probVec, probVecSum);
-                group_propose[ind][l][p] = thisGroup;
+                int this_group = sample1(probVec, probVecSum);
+                group_propose[ind][l][p] = this_group;
                 
                 // calculate probability of new grouping
-                propose_logProb_new += log(probVec[thisGroup-1]) - log(probVecSum);
-                logLike_new += log(probVec[thisGroup-1]);
+                propose_logProb_new += log(probVec[this_group-1]) - log(probVecSum);
+                logLike_new += log(probVec[this_group-1]);
                 
                 // add this gene copy to allele counts and admix counts
-                if (thisData!=0) {   // if not missing data
-                    alleleCounts[thisGroup-1][l][thisData-1]++;
-                    alleleCountsTotals[thisGroup-1][l]++;
+                if (this_data!=0) {   // if not missing data
+                    alleleCounts[this_group-1][l][this_data-1]++;
+                    alleleCountsTotals[this_group-1][l]++;
                     
-                    admixCounts[ind][thisGroup-1]++;
+                    admixCounts[ind][this_group-1]++;
                     admixCountsTotals[ind]++;
                 }
             }
@@ -312,23 +308,23 @@ void particle_admixture::group_update_indLevel() {
             // reject move
             for (unsigned int l=0; l<loci; l++) {
                 for (unsigned int p=0; p<ploidy_vec[ind]; p++) {
-                    thisData = data[ind][l][p];
-                    if (thisData!=0) {   // if not missing data
+                    int this_data = data[ind][l][p];
+                    if (this_data!=0) {   // if not missing data
                         
                         // subtract new group
-                        thisGroup = group_propose[ind][l][p];
-                        alleleCounts[thisGroup-1][l][thisData-1]--;
-                        alleleCountsTotals[thisGroup-1][l]--;
+                        int this_group = group_propose[ind][l][p];
+                        alleleCounts[this_group-1][l][this_data-1]--;
+                        alleleCountsTotals[this_group-1][l]--;
                         
-                        admixCounts[ind][thisGroup-1]--;
+                        admixCounts[ind][this_group-1]--;
                         admixCountsTotals[ind]--;
                         
                         // reinstate old group
-                        thisGroup = group[ind][l][p];
-                        alleleCounts[thisGroup-1][l][thisData-1]++;
-                        alleleCountsTotals[thisGroup-1][l]++;
+                        this_group = group[ind][l][p];
+                        alleleCounts[this_group-1][l][this_data-1]++;
+                        alleleCountsTotals[this_group-1][l]++;
                         
-                        admixCounts[ind][thisGroup-1]++;
+                        admixCounts[ind][this_group-1]++;
                         admixCountsTotals[ind]++;
                     }
                     
@@ -346,17 +342,19 @@ void particle_admixture::group_update_indLevel() {
 // resample group allocation of all individuals by drawing from conditional posterior
 void particle_admixture::group_update_Klevel() {
     
-    // if beta==0 then all moves accepted, so skip
-    if (beta==0)
+    // if beta_raised==0 then all moves accepted, so skip
+    if (beta_raised==0) {
         return;
+    }
     
     // choose two distinct random groups
     int K1 = sample2(1,K);
     int K2 = sample2(1,K);
     if (K2==K1) {
         K2++;
-        if (K2>K)
+        if (K2>K) {
             K2 = 1;
+        }
     }
     
     // search through observations in random order
@@ -369,35 +367,35 @@ void particle_admixture::group_update_Klevel() {
         int ind = group_order[i]-1;
         for (int l=0; l<loci; l++) {
             for (int p=0; p<ploidy_vec[ind]; p++) {
-                thisGroup = group[ind][l][p];
-                if (thisGroup==K1 || thisGroup==K2) {
+                int this_group = group[ind][l][p];
+                if (this_group==K1 || this_group==K2) {
                     
-                    thisData = data[ind][l][p];
-                    if (thisData==0) {
-                        probVec[thisGroup-1] = 0.5;
+                    int this_data = data[ind][l][p];
+                    if (this_data==0) {
+                        probVec[this_group-1] = 0.5;
                         probVecSum = 1;
                     } else {
-                        alleleCounts[thisGroup-1][l][thisData-1]--;
-                        alleleCountsTotals[thisGroup-1][l]--;
+                        alleleCounts[this_group-1][l][this_data-1]--;
+                        alleleCountsTotals[this_group-1][l]--;
                         
-                        admixCounts[ind][thisGroup-1]--;
+                        admixCounts[ind][this_group-1]--;
                         admixCountsTotals[ind]--;
                         
-                        thisAlleleCounts = alleleCounts[K1-1][l][thisData-1];
-                        thisAlleleCountsTotals = alleleCountsTotals[K1-1][l];
-                        if ((thisAlleleCounts<int(1e4)) && (thisAlleleCountsTotals<int(1e4))) {
-                            logProbVec[K1-1] = beta*log_lookup_0[thisAlleleCounts] - log_lookup[thisAlleleCountsTotals][J[l]-1];
+                        int this_allele_counts = alleleCounts[K1-1][l][this_data-1];
+                        int this_allele_counts_totals = alleleCountsTotals[K1-1][l];
+                        if ((this_allele_counts<int(1e4)) && (this_allele_counts_totals<int(1e4))) {
+                            logProbVec[K1-1] = beta_raised*log_lookup_0[this_allele_counts] - log_lookup[this_allele_counts_totals][J[l]-1];
                         } else {
-                            logProbVec[K1-1] = beta*log((thisAlleleCounts + lambda)/double(thisAlleleCountsTotals + J[l]*lambda));
+                            logProbVec[K1-1] = beta_raised*log((this_allele_counts + lambda)/double(this_allele_counts_totals + J[l]*lambda));
                         }
                         probVec[K1-1] = double(admixCounts[ind][K1-1]+alpha)*exp(logProbVec[K1-1]);
                         
-                        thisAlleleCounts = alleleCounts[K2-1][l][thisData-1];
-                        thisAlleleCountsTotals = alleleCountsTotals[K2-1][l];
-                        if ((thisAlleleCounts<int(1e4)) && (thisAlleleCountsTotals<int(1e4))) {
-                            logProbVec[K2-1] = beta*log_lookup_0[thisAlleleCounts] - log_lookup[thisAlleleCountsTotals][J[l]-1];
+                        this_allele_counts = alleleCounts[K2-1][l][this_data-1];
+                        this_allele_counts_totals = alleleCountsTotals[K2-1][l];
+                        if ((this_allele_counts<int(1e4)) && (this_allele_counts_totals<int(1e4))) {
+                            logProbVec[K2-1] = beta_raised*log_lookup_0[this_allele_counts] - log_lookup[this_allele_counts_totals][J[l]-1];
                         } else {
-                            logProbVec[K2-1] = beta*log((thisAlleleCounts + lambda)/double(thisAlleleCountsTotals + J[l]*lambda));
+                            logProbVec[K2-1] = beta_raised*log((this_allele_counts + lambda)/double(this_allele_counts_totals + J[l]*lambda));
                         }
                         probVec[K2-1] = double(admixCounts[ind][K2-1]+alpha)*exp(logProbVec[K2-1]);
                         
@@ -405,8 +403,8 @@ void particle_admixture::group_update_Klevel() {
                     }
                     
                     // calculate probability of chosen grouping
-                    propose_logProb_old += log(probVec[thisGroup-1]/probVecSum);
-                    logLike_old += log(probVec[thisGroup-1]);
+                    propose_logProb_old += log(probVec[this_group-1]/probVecSum);
+                    logLike_old += log(probVec[this_group-1]);
                     
                 }   // end if group==K1 or K2
             }   // end loop over ploidy
@@ -420,30 +418,30 @@ void particle_admixture::group_update_Klevel() {
         int ind = group_order[i]-1;
         for (int l=0; l<loci; l++) {
             for (int p=0; p<ploidy_vec[ind]; p++) {
-                thisGroup = group[ind][l][p];
-                if (thisGroup==K1 || thisGroup==K2) {
+                int this_group = group[ind][l][p];
+                if (this_group==K1 || this_group==K2) {
                     
-                    thisData = data[ind][l][p];
-                    if (thisData==0) {
-                        probVec[thisGroup-1] = 0.5;
+                    int this_data = data[ind][l][p];
+                    if (this_data==0) {
+                        probVec[this_group-1] = 0.5;
                         probVecSum = 1;
                     } else {
                         
-                        thisAlleleCounts = alleleCounts[K1-1][l][thisData-1];
-                        thisAlleleCountsTotals = alleleCountsTotals[K1-1][l];
-                        if ((thisAlleleCounts<int(1e4)) && (thisAlleleCountsTotals<int(1e4))) {
-                            logProbVec[K1-1] = beta*log_lookup_0[thisAlleleCounts] - log_lookup[thisAlleleCountsTotals][J[l]-1];
+                        int this_allele_counts = alleleCounts[K1-1][l][this_data-1];
+                        int this_allele_counts_totals = alleleCountsTotals[K1-1][l];
+                        if ((this_allele_counts<int(1e4)) && (this_allele_counts_totals<int(1e4))) {
+                            logProbVec[K1-1] = beta_raised*log_lookup_0[this_allele_counts] - log_lookup[this_allele_counts_totals][J[l]-1];
                         } else {
-                            logProbVec[K1-1] = beta*log((thisAlleleCounts + lambda)/double(thisAlleleCountsTotals + J[l]*lambda));
+                            logProbVec[K1-1] = beta_raised*log((this_allele_counts + lambda)/double(this_allele_counts_totals + J[l]*lambda));
                         }
                         probVec[K1-1] = double(admixCounts[ind][K1-1]+alpha)*exp(logProbVec[K1-1]);
                         
-                        thisAlleleCounts = alleleCounts[K2-1][l][thisData-1];
-                        thisAlleleCountsTotals = alleleCountsTotals[K2-1][l];
-                        if ((thisAlleleCounts<int(1e4)) && (thisAlleleCountsTotals<int(1e4))) {
-                            logProbVec[K2-1] = beta*log_lookup_0[thisAlleleCounts] - log_lookup[thisAlleleCountsTotals][J[l]-1];
+                        this_allele_counts = alleleCounts[K2-1][l][this_data-1];
+                        this_allele_counts_totals = alleleCountsTotals[K2-1][l];
+                        if ((this_allele_counts<int(1e4)) && (this_allele_counts_totals<int(1e4))) {
+                            logProbVec[K2-1] = beta_raised*log_lookup_0[this_allele_counts] - log_lookup[this_allele_counts_totals][J[l]-1];
                         } else {
-                            logProbVec[K2-1] = beta*log((thisAlleleCounts + lambda)/double(thisAlleleCountsTotals + J[l]*lambda));
+                            logProbVec[K2-1] = beta_raised*log((this_allele_counts + lambda)/double(this_allele_counts_totals + J[l]*lambda));
                         }
                         probVec[K2-1] = double(admixCounts[ind][K2-1]+alpha)*exp(logProbVec[K2-1]);
                         
@@ -456,7 +454,7 @@ void particle_admixture::group_update_Klevel() {
                             group_propose[ind][l][p] = K2;
                         }
                         
-                        alleleCounts[group_propose[ind][l][p]-1][l][thisData-1]++;
+                        alleleCounts[group_propose[ind][l][p]-1][l][this_data-1]++;
                         alleleCountsTotals[group_propose[ind][l][p]-1][l]++;
                         
                         admixCounts[ind][group_propose[ind][l][p]-1]++;
@@ -476,18 +474,14 @@ void particle_admixture::group_update_Klevel() {
     double MH_diff = (logLike_new - propose_logProb_new) - (logLike_old - propose_logProb_old);
     double rand1 = runif1(0,1);
     
-    test2++;
-    
     if (log(rand1)<MH_diff) {
-        
-        test1++;
         
         // accept move
         for (int ind=0; ind<n; ind++) {
             for (int l=0; l<loci; l++) {
                 for (int p=0; p<ploidy_vec[ind]; p++) {
-                    thisGroup = group[ind][l][p];
-                    if (thisGroup==K1 || thisGroup==K2) {
+                    int this_group = group[ind][l][p];
+                    if (this_group==K1 || this_group==K2) {
                         group[ind][l][p] = group_propose[ind][l][p];
                     }
                 }
@@ -500,23 +494,23 @@ void particle_admixture::group_update_Klevel() {
         for (int ind=0; ind<n; ind++) {
             for (int l=0; l<loci; l++) {
                 for (int p=0; p<ploidy_vec[ind]; p++) {
-                    thisGroup = group[ind][l][p];
-                    if (thisGroup==K1 || thisGroup==K2) {
-                        thisData = data[ind][l][p];
-                        if (thisData!=0) {   // if not missing data
+                    int this_group = group[ind][l][p];
+                    if (this_group==K1 || this_group==K2) {
+                        int this_data = data[ind][l][p];
+                        if (this_data!=0) {   // if not missing data
                             
                             // subtract new group
-                            alleleCounts[group_propose[ind][l][p]-1][l][thisData-1]--;
+                            alleleCounts[group_propose[ind][l][p]-1][l][this_data-1]--;
                             alleleCountsTotals[group_propose[ind][l][p]-1][l]--;
                             
                             admixCounts[ind][group_propose[ind][l][p]-1]--;
                             admixCountsTotals[ind]--;
                             
                             // reinstate old group
-                            alleleCounts[thisGroup-1][l][thisData-1]++;
-                            alleleCountsTotals[thisGroup-1][l]++;
+                            alleleCounts[this_group-1][l][this_data-1]++;
+                            alleleCountsTotals[this_group-1][l]++;
                             
-                            admixCounts[ind][thisGroup-1]++;
+                            admixCounts[ind][this_group-1]++;
                             admixCountsTotals[ind]++;
                             
                         }
@@ -535,8 +529,8 @@ void particle_admixture::group_update_Klevel() {
 void particle_admixture::alpha_update() {
     
     // prior parameters on alpha (shape and rate of gamma prior)
-    double epsilon = 1.0;
-    double lambda = 0.2;
+    double alpha_shape = 1.0;
+    double alpha_rate = 0.2;
     
     // draw latent variables
     int z = 0;
@@ -549,8 +543,8 @@ void particle_admixture::alpha_update() {
     }
     
     // draw final gamma parameters
-    double w1 = epsilon + z - n;
-    double w2 = lambda - K*logPhi;
+    double w1 = alpha_shape + z - n;
+    double w2 = alpha_rate - K*logPhi;
     double p;
     for (int i=0; i<n; i++) {
         p = admixCountsTotals[i]/(admixCountsTotals[i] + K*w1/w2);

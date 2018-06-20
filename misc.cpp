@@ -19,6 +19,16 @@ using namespace std;
 // DEFINED IN HEADER
 
 //------------------------------------------------
+// define manual versions of positive and negative infinity
+// DEFINED IN HEADER
+
+//------------------------------------------------
+// round a double to nearest integer
+int my_round(double x) {
+    return x<0.0 ? int(ceil(x-0.5)) : int(floor(x+0.5));
+}
+
+//------------------------------------------------
 // basic sum over elements in a vector (templated for different data types)
 // DEFINED IN HEADER
 

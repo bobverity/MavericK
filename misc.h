@@ -31,6 +31,10 @@
 #define NEGINF   log(double(0))
 
 //------------------------------------------------
+// round a double to nearest integer
+int my_round(double x);
+
+//------------------------------------------------
 // basic sum over elements in a vector (templated for different data types).
 template<class TYPE>
 TYPE sum(std::vector<TYPE> &x) {

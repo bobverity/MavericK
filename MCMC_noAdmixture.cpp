@@ -17,28 +17,30 @@ using namespace std;
 //------------------------------------------------
 // MCMC_noAdmixture::
 // constructor for class containing all elements required for MCMC under no-admixture model
-MCMC_noAdmixture::MCMC_noAdmixture(globals &globals, int _Kindex, int _rungs) {
+MCMC_noAdmixture::MCMC_noAdmixture(globals &globals, int _Kindex) {
     
     // copy some values over from globals object
     Kindex = _Kindex;
     K = globals.Kmin+Kindex;
     n = globals.n;
     outputQmatrix_pop_on = globals.outputQmatrix_pop_on;
+    outputLikelihood_on = globals.outputLikelihood_on;
     nPops = int(globals.uniquePops.size());
-    burnin = globals.mainBurnin;
-    samples = globals.mainSamples;
+    burnin = globals.burnin;
+    samples = globals.samples;
+    GTI_pow = globals.GTI_pow;
     
     // create a particle for each rung
-    rungs = _rungs;
-    rungOrder = vector<int>(rungs);
-    betaVec = vector<double>(rungs);
-    particleVec = vector<particle_noAdmixture>(rungs);
+    rungs = globals.rungs;
+    rung_order = vector<int>(rungs);
+    beta_raised_vec = vector<double>(rungs);
+    particle_vec = vector<particle_noAdmixture>(rungs);
     for (int rung=0; rung<rungs; rung++) {
-        rungOrder[rung] = rung;
-        betaVec[rung] = rung/double(rungs-1);
-        particleVec[rung] = particle_noAdmixture(globals, K, betaVec[rung]);
+        rung_order[rung] = rung;
+        beta_raised_vec[rung] = (rungs==1) ? 1 : pow((rung+1)/double(rungs), GTI_pow);
+        particle_vec[rung] = particle_noAdmixture(globals, K, beta_raised_vec[rung]);
     }
-    acceptanceRate = vector<double>(rungs-1);
+    coupling_accept = vector<double>(rungs-1);
     
     // likelihoods for each rung
     logLikeGroup_sum = vector<double>(rungs);
@@ -65,20 +67,13 @@ MCMC_noAdmixture::MCMC_noAdmixture(globals &globals, int _Kindex, int _rungs) {
     autoCorr = vector<double>(rungs);
     ESS = vector<double>(rungs);
     
-    // harmonic mean estimator
-    harmonic = NEGINF;
-    
-    // Structure estimator
-    structure_loglike_mean = 0;
-    structure_loglike_var = 0;
-    logEvidence_structure = 0;
-    
     // TI point estimates for each rung
     TIpoint_mean = vector<double>(rungs);
     TIpoint_var = vector<double>(rungs);
     TIpoint_SE = vector<double>(rungs);
     
-    // overall TI point estimate and SE
+    // overall TI estimate and SE
+    logEvidence_TI_store = vector<double>(samples);
     logEvidence_TI = 0;
     logEvidence_TI_var = 0;
     logEvidence_TI_SE = 0;
@@ -86,7 +81,6 @@ MCMC_noAdmixture::MCMC_noAdmixture(globals &globals, int _Kindex, int _rungs) {
     // initialise objects for Hungarian algorithm
     costMat = vector< vector<double> >(K, vector<double>(K));
     bestPermOrder = vector<int>(K);
-    
     edgesLeft = vector<int>(K);
     edgesRight = vector<int>(K);
     blockedLeft = vector<int>(K);
@@ -101,7 +95,7 @@ void MCMC_noAdmixture::perform_MCMC(globals &globals) {
     
     // reset chains
     for (int rung=0; rung<rungs; rung++) {
-        particleVec[rung].reset();
+        particle_vec[rung].reset();
     }
     
     // perform MCMC
@@ -111,66 +105,70 @@ void MCMC_noAdmixture::perform_MCMC(globals &globals) {
         for (int rung=0; rung<rungs; rung++) {
             
             // update group allocation of all individuals
-            particleVec[rung].group_update();
+            particle_vec[rung].group_update();
             
             // MH step to update group allocation at deme level
-            particleVec[rung].group_update_Klevel();
+            particle_vec[rung].group_update_Klevel();
             
             // calculate group log-likelihood
-            particleVec[rung].d_logLikeGroup();
+            particle_vec[rung].d_logLikeGroup();
         }
         
         // carry out Metropolis coupling
         MetropolisCoupling();
         
-        // PRINT JUNK TO FILE
-        //for (int i=0; i<rungs; i++) {
-        //    globals.junk_fileStream << particleVec[rungOrder[i]].logLikeGroup << "\t";
-        //}
-        //globals.junk_fileStream << "\n";
-        
         // focus on coldest rung (i.e. the real chain)
-        rung1 = rungOrder[rungs-1];
+        int cold_rung = rung_order[rungs-1];
         
         // fix label-switching problem and save Qmatrix
-        updateQmatrix(particleVec[rung1], rep>=burnin);
+        updateQmatrix(particle_vec[cold_rung], rep>=burnin);
+        
+        // draw allele frequencies and calculate joint likelihood
+        particle_vec[cold_rung].drawFreqs();
+        particle_vec[cold_rung].d_logLikeJoint();
         
         // if no longer in burn-in phase
         if (rep>=burnin) {
             
             // add logLikeGroup to running sums
             for (int i=0; i<rungs; i++) {
-                logLikeGroup_store[i][rep-burnin] = particleVec[rungOrder[i]].logLikeGroup;
-                logLikeGroup_sum[i] += particleVec[rungOrder[i]].logLikeGroup;
-                logLikeGroup_sumSquared[i] += particleVec[rungOrder[i]].logLikeGroup*particleVec[rungOrder[i]].logLikeGroup;
+                logLikeGroup_store[i][rep-burnin] = particle_vec[rung_order[i]].logLikeGroup;
+                logLikeGroup_sum[i] += particle_vec[rung_order[i]].logLikeGroup;
+                logLikeGroup_sumSquared[i] += particle_vec[rung_order[i]].logLikeGroup*particle_vec[rung_order[i]].logLikeGroup;
             }
             
-            // add logLikeGroup to harmonic mean estimator
-            harmonic = logSum(harmonic, -particleVec[rung1].logLikeGroup);
+            // add logLikeJoint to running sums
+            logLikeJoint_sum += particle_vec[cold_rung].logLikeJoint;
+            logLikeJoint_sumSquared += particle_vec[cold_rung].logLikeJoint*particle_vec[cold_rung].logLikeJoint;
             
-            // draw allele frequencies and calculate joint likelihood
-            particleVec[rung1].drawFreqs();
-            particleVec[rung1].d_logLikeJoint();
-            logLikeJoint_sum += particleVec[rung1].logLikeJoint;
-            logLikeJoint_sumSquared += particleVec[rung1].logLikeJoint*particleVec[rung1].logLikeJoint;
+            // calculate TI estimate this iteration
+            double w1 = pow(1/double(rungs), GTI_pow-1.0);
+            logEvidence_TI_store[rep-burnin] = 0.5*GTI_pow*w1*particle_vec[rung_order[0]].logLikeGroup/double(rungs);
+            if (rungs>1) {
+                for (int i=1; i<rungs; i++) {
+                    double loglike1 = particle_vec[rung_order[i-1]].logLikeGroup;
+                    double loglike2 = particle_vec[rung_order[i]].logLikeGroup;
+                    double w1 = pow(i/double(rungs), GTI_pow-1.0);
+                    double w2 = pow((i+1)/double(rungs), GTI_pow-1.0);
+                    logEvidence_TI_store[rep-burnin] += 0.5*GTI_pow*(w1*loglike1 + w2*loglike2)/double(rungs);
+                }
+            }
             
+        }
+        
+        // write to outputLikelihoods file
+        if (outputLikelihood_on) {
+            globals.outputLikelihood_fileStream << K << "," << 1 << "," << rep-burnin+1 << "," << particle_vec[cold_rung].logLikeGroup << "," << particle_vec[cold_rung].logLikeJoint << "\n";
+            globals.outputLikelihood_fileStream.flush();
         }
         
     } // end of MCMC
     
     // finish off acceptance rate vector
     for (int rung=0; rung<rungs; rung++) {
-        acceptanceRate[rung] /= double(burnin+samples);
+        coupling_accept[rung] /= double(burnin+samples);
     }
-    printVector(acceptanceRate);
-    
-    // finish off harmonic mean estimator
-    harmonic = log(double(samples))-harmonic;
-    
-    // calculate Structure estimator from joint likelihoods
-    structure_loglike_mean = logLikeJoint_sum/double(samples);
-    structure_loglike_var = logLikeJoint_sumSquared/double(samples) - structure_loglike_mean*structure_loglike_mean;
-    logEvidence_structure = structure_loglike_mean - 0.5*structure_loglike_var;
+    //printVector(coupling_accept);
     
     // process logLikeGroup values for each rung. Calculate mean and SE, taking into account autocorrelation.
     for (int rung=0; rung<rungs; rung++) {
@@ -188,16 +186,13 @@ void MCMC_noAdmixture::perform_MCMC(globals &globals) {
         TIpoint_SE[rung] = sqrt(TIpoint_var[rung]/ESS[rung]);
     }
     
-    // calculate overall TI point estimate and SE. Note that simply summing the variance by looping over rungs will give the wrong answer, as it fails to account for the fact that variance(2*A) is not 2*variance(A) but rather 4*variance(A).
-    logEvidence_TI = 0.5*TIpoint_mean[0]*(betaVec[1]-betaVec[0]) + 0.5*TIpoint_mean[rungs-1]*(betaVec[rungs-1]-betaVec[rungs-2]);
-    logEvidence_TI_var = 0.25*TIpoint_var[0]/ESS[0]*pow(betaVec[1]-betaVec[0],2) + 0.25*TIpoint_var[rungs-1]/ESS[rungs-1]*pow(betaVec[rungs-1]-betaVec[rungs-2],2);
-    if (rungs>2) {
-        for (int rung=1; rung<(rungs-1); rung++) {
-            logEvidence_TI += TIpoint_mean[rung]*(betaVec[rung] - betaVec[rung-1]);
-            logEvidence_TI_var += TIpoint_var[rung]/ESS[rung]*pow(betaVec[rung]-betaVec[rung-1],2);
-        }
-    }
-    logEvidence_TI_SE = sqrt(logEvidence_TI_var);
+    // calculate TI autocorrelation
+    double TI_autoCorr = calculateAutoCorr(logEvidence_TI_store);
+    double TI_ESS = samples/TI_autoCorr;
+    
+    // calculate overall TI point estimate and SE
+    logEvidence_TI = mean(logEvidence_TI_store);
+    logEvidence_TI_SE = sqrt(var(logEvidence_TI_store)/TI_ESS);
     
     // calculate population level Qmatrices
     if (outputQmatrix_pop_on) {
@@ -277,42 +272,37 @@ void MCMC_noAdmixture::updateQmatrix(particle_noAdmixture &particle, bool outOfB
 // swap chains in Metropolis step
 void MCMC_noAdmixture::MetropolisCoupling() {
     
-    // loop over rungs, starting with the hottest chain and moving to the cold chain. Each time propose a swap with a randomly chosen chain.
-    for (int i1=0; i1<rungs; i1++) {
+    // loop over rungs, starting with the hottest chain and moving to the cold chain. Each time propose a swap with the next rung up.
+    for (int i=0; i<(rungs-1); i++) {
         
-        // draw value i2!=i1
-        int i2 = sample2(1,rungs)-1;
-        if (i2==i1) {
-            i2++;
-            if (i2==rungs)
-                i2 = 0;
-        }
-        rung1 = rungOrder[i1];
-        rung2 = rungOrder[i2];
+        // define rungs of interest
+        int rung1 = rung_order[i];
+        int rung2 = rung_order[i+1];
         
-        // get log-likelihoods of two chains in the comparison
-        double logLike1 = particleVec[rung1].logLikeGroup;
-        double logLike2 = particleVec[rung2].logLikeGroup;
+        // get log-likelihoods and beta values of two chains in the comparison
+        double loglike1 = particle_vec[rung1].logLikeGroup;
+        double loglike2 = particle_vec[rung2].logLikeGroup;
+        
+        double beta_raised1 = particle_vec[rung1].beta_raised;
+        double beta_raised2 = particle_vec[rung2].beta_raised;
         
         // calculate acceptance ratio (still in log space)
-        double acceptance = (logLike2*betaVec[rung1] + logLike1*betaVec[rung2]) - (logLike1*betaVec[rung1] + logLike2*betaVec[rung2]);
+        double acceptance = (loglike2*beta_raised1 + loglike1*beta_raised2) - (loglike1*beta_raised1 + loglike2*beta_raised2);
         
         // accept or reject move
         double rand1 = runif1();
         if (log(rand1)<acceptance) {
             
             // swap beta values
-            double spareBeta = particleVec[rung1].beta;
-            particleVec[rung1].beta = particleVec[rung2].beta;
-            particleVec[rung2].beta = spareBeta;
+            particle_vec[rung1].beta_raised = beta_raised2;
+            particle_vec[rung2].beta_raised = beta_raised1;
             
             // swap rung order
-            rungOrder[i1] = rung2;
-            rungOrder[i2] = rung1;
+            rung_order[i] = rung2;
+            rung_order[i+1] = rung1;
             
-            // update Metropolis coupling acceptance ratio
-            acceptanceRate[i1]++;
-            
+            // update acceptance rates
+            coupling_accept[i]++;
         }
     }
     

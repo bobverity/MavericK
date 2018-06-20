@@ -49,27 +49,11 @@ void openFileStreams(globals &globals) {
         globals.outputEvidence_fileStream = safe_ofstream(globals.outputEvidence_filePath, globals.outputLog_on, globals.outputLog_fileStream);
         // exhaustive
         globals.outputEvidence_fileStream << "K,logEvidence_exhaustive";
-        // harmonic
-        globals.outputEvidence_fileStream << ",logEvidence_harmonic";
-        // structure
-        globals.outputEvidence_fileStream << ",logEvidence_structure";
         // TI
         globals.outputEvidence_fileStream << ",logEvidence_TI,logEvidence_TI_SE";
         
         globals.outputEvidence_fileStream << "\n";
         globals.outputEvidence_fileStream.flush();
-        
-    }
-    
-    // ComparisonStatistics
-    if (globals.outputComparisonStatistics_on) {
-        // open file stream
-        globals.outputComparisonStatistics_fileStream = safe_ofstream(globals.outputComparisonStatistics_filePath, globals.outputLog_on, globals.outputLog_fileStream);
-        // fixed headers
-        globals.outputComparisonStatistics_fileStream << "K,AIC,BIC,DIC_S,DIC_G";
-        
-        globals.outputComparisonStatistics_fileStream << "\n";
-        globals.outputComparisonStatistics_fileStream.flush();
         
     }
     
@@ -79,67 +63,16 @@ void openFileStreams(globals &globals) {
         globals.outputEvidenceDetails_fileStream = safe_ofstream(globals.outputEvidenceDetails_filePath, globals.outputLog_on, globals.outputLog_fileStream);
         // fixed headers
         globals.outputEvidenceDetails_fileStream << "K";
-        // structure mean and variance
-        globals.outputEvidenceDetails_fileStream << ",structure_loglike_mean";
-        globals.outputEvidenceDetails_fileStream << ",structure_loglike_var";
         // TI mean and standard error
-        for (int TIrep=0; TIrep<globals.mainRungs; TIrep++) {
+        for (int TIrep=0; TIrep<globals.rungs; TIrep++) {
             globals.outputEvidenceDetails_fileStream << ",TIpoint_mean_rung" << TIrep+1;
         }
-        for (int TIrep=0; TIrep<globals.mainRungs; TIrep++) {
+        for (int TIrep=0; TIrep<globals.rungs; TIrep++) {
             globals.outputEvidenceDetails_fileStream << ",TIpoint_SE_rung" << TIrep+1;
         }
         globals.outputEvidenceDetails_fileStream << "\n";
         globals.outputEvidenceDetails_fileStream.flush();
         
-    }
-    
-    // PosteriorGrouping
-    if (globals.outputPosteriorGrouping_on) {
-        // open file stream
-        globals.outputPosteriorGrouping_fileStream = safe_ofstream(globals.outputPosteriorGrouping_filePath, globals.outputLog_on, globals.outputLog_fileStream);
-        // fixed headers
-        globals.outputPosteriorGrouping_fileStream << "K,mainRep,MCMCsample";
-        // non-admixture version
-        if (!globals.admix_on) {
-            for (int i=0; i<globals.n; i++) {
-                globals.outputPosteriorGrouping_fileStream << ",ind" << i+1;
-            }
-        }
-        // admixture version
-        if (globals.admix_on) {
-            for (int i=0; i<globals.n; i++) {
-                for (int l=0; l<globals.loci; l++) {
-                    for (int p=0; p<globals.ploidy_vec[i]; p++) {
-                        globals.outputPosteriorGrouping_fileStream << ",ind" << i+1 << "_loc" << l+1 << "_copy" << p+1;
-                    }
-                }
-            }
-        }
-        globals.outputPosteriorGrouping_fileStream << "\n";
-        globals.outputPosteriorGrouping_fileStream.flush();
-    }
-    
-    // MaxLike_alleleFreqs
-    if (globals.outputMaxLike_alleleFreqs_on) {
-        // open file stream
-        globals.outputMaxLike_alleleFreqs_fileStream = safe_ofstream(globals.outputMaxLike_alleleFreqs_filePath, globals.outputLog_on, globals.outputLog_fileStream);
-        // fixed headers
-        globals.outputMaxLike_alleleFreqs_fileStream << "K,deme,locus,allele,frequency";
-        
-        globals.outputMaxLike_alleleFreqs_fileStream << "\n";
-        globals.outputMaxLike_alleleFreqs_fileStream.flush();
-    }
-    
-    // MaxLike_admixFreqs
-    if (globals.outputMaxLike_admixFreqs_on) {
-        // open file stream
-        globals.outputMaxLike_admixFreqs_fileStream = safe_ofstream(globals.outputMaxLike_admixFreqs_filePath, globals.outputLog_on, globals.outputLog_fileStream);
-        // fixed headers
-        globals.outputMaxLike_admixFreqs_fileStream << "K,ind,deme,admixture_proportion";
-        
-        globals.outputMaxLike_admixFreqs_fileStream << "\n";
-        globals.outputMaxLike_admixFreqs_fileStream.flush();
     }
     
 }
@@ -153,12 +86,6 @@ void printEvidence(globals &globals, int Kindex) {
     
     // exhaustive
     globals.outputEvidence_fileStream << "," << process_nan(globals.logEvidence_exhaustive[Kindex]);
-    
-    // harmonic
-    globals.outputEvidence_fileStream << "," << process_nan(globals.logEvidence_harmonic[Kindex]);
-    
-    // structure
-    globals.outputEvidence_fileStream << "," << process_nan(globals.logEvidence_structure[Kindex]);
     
     // TI
     globals.outputEvidence_fileStream << "," << process_nan(globals.logEvidence_TI[Kindex]);
@@ -176,15 +103,11 @@ void printEvidenceDetails(globals &globals, int Kindex) {
     
     globals.outputEvidenceDetails_fileStream << K;
     
-    // Structure estimator details
-    globals.outputEvidenceDetails_fileStream << "," << process_nan(globals.structure_loglike_mean[Kindex]);
-    globals.outputEvidenceDetails_fileStream << "," << process_nan(globals.structure_loglike_var[Kindex]);
-    
     // thermodynamic integral estimator details
-    for (int TIrep=0; TIrep<globals.mainRungs; TIrep++) {
+    for (int TIrep=0; TIrep<globals.rungs; TIrep++) {
         globals.outputEvidenceDetails_fileStream << "," << process_nan(globals.TIpoint_mean[Kindex][TIrep]);
     }
-    for (int TIrep=0; TIrep<globals.mainRungs; TIrep++) {
+    for (int TIrep=0; TIrep<globals.rungs; TIrep++) {
         globals.outputEvidenceDetails_fileStream << "," << process_nan(globals.TIpoint_SE[Kindex][TIrep]);
     }
     
@@ -199,14 +122,9 @@ void printEvidenceNormalised(globals &globals) {
     cout << "Calculating normalised results...\n\n";
     
     // normalise exhaustive results
-    if (globals.exhaustive_on)
+    if (globals.exhaustive_on) {
         globals.posterior_exhaustive = normalise_log(globals.logEvidence_exhaustive);
-    
-    // normalise harmonic mean results
-    globals.posterior_harmonic_mean = normalise_log(globals.logEvidence_harmonic);
-    
-    // normalise structure estimator results
-    globals.posterior_structure_mean = normalise_log(globals.logEvidence_structure);
+    }
     
     // normalise thermodynamic integral estimator results
     normalise_log_sim(globals.posterior_TI_mean, globals.posterior_TI_LL, globals.posterior_TI_UL, globals.logEvidence_TI, globals.logEvidence_TI_SE, int(1e6));
@@ -215,7 +133,7 @@ void printEvidenceNormalised(globals &globals) {
     globals.outputEvidenceNormalised_fileStream = safe_ofstream(globals.outputEvidenceNormalised_filePath, globals.outputLog_on, globals.outputLog_fileStream);
     
     // print headers
-    globals.outputEvidenceNormalised_fileStream << "K,posterior_exhaustive,posterior_harmonic_mean,posterior_harmonic_LL,posterior_harmonic_UL,posterior_structure_mean,posterior_structure_LL,posterior_structure_UL,posterior_TI_mean,posterior_TI_LL,posterior_TI_UL\n";
+    globals.outputEvidenceNormalised_fileStream << "K,posterior_exhaustive,posterior_TI_mean,posterior_TI_LL,posterior_TI_UL\n";
     
     // loop over K
     for (int Kindex=0; Kindex<=(globals.Kmax-globals.Kmin); Kindex++) {
@@ -227,16 +145,6 @@ void printEvidenceNormalised(globals &globals) {
         // exhaustive results normalised
         globals.outputEvidenceNormalised_fileStream << "," << process_nan(globals.posterior_exhaustive[Kindex]);
         
-        // harmonic mean results normalised
-        globals.outputEvidenceNormalised_fileStream << "," << process_nan(globals.posterior_harmonic_mean[Kindex]);
-        globals.outputEvidenceNormalised_fileStream << "," << process_nan(globals.posterior_harmonic_LL[Kindex]);
-        globals.outputEvidenceNormalised_fileStream << "," << process_nan(globals.posterior_harmonic_UL[Kindex]);
-        
-        // Structure estimator results normalised
-        globals.outputEvidenceNormalised_fileStream << "," << process_nan(globals.posterior_structure_mean[Kindex]);
-        globals.outputEvidenceNormalised_fileStream << "," << process_nan(globals.posterior_structure_LL[Kindex]);
-        globals.outputEvidenceNormalised_fileStream << "," << process_nan(globals.posterior_structure_UL[Kindex]);
-        
         // thermodynamic integral estimator results normalised
         globals.outputEvidenceNormalised_fileStream << "," << process_nan(globals.posterior_TI_mean[Kindex]);
         globals.outputEvidenceNormalised_fileStream << "," << process_nan(globals.posterior_TI_LL[Kindex]);
@@ -246,50 +154,6 @@ void printEvidenceNormalised(globals &globals) {
         
     }
     globals.outputEvidenceNormalised_fileStream.flush();
-}
-
-//------------------------------------------------
-// write max-like allele frequencies to file
-void printMaxLike_alleleFreqs(globals &globals, int Kindex) {
-    int K = globals.Kmin+Kindex;
-    
-    // print values
-    for (int k=0; k<K; k++) {
-        for (int l=0; l<globals.loci; l++) {
-            for (int j=0; j<globals.J[l]; j++) {
-                globals.outputMaxLike_alleleFreqs_fileStream << K << "," << k+1 << "," << l+1 << "," << globals.uniqueAlleles[l][j] << "," << process_nan(globals.max_alleleFreqs[k][l][j]) << "\n";
-            }
-        }
-    }
-    globals.outputMaxLike_alleleFreqs_fileStream.flush();
-    
-}
-
-//------------------------------------------------
-// write max-like admixture frequencies to file
-void printMaxLike_admixFreqs(globals &globals, int Kindex) {
-    int K = globals.Kmin+Kindex;
-    
-    // print values
-    for (int i=0; i<globals.n; i++) {
-        for (int k=0; k<K; k++) {
-            globals.outputMaxLike_admixFreqs_fileStream << K << "," << i+1 << "," << k+1 << "," << process_nan(globals.max_admixFreqs[i][k]) << "\n";
-        }
-    }
-    globals.outputMaxLike_alleleFreqs_fileStream.flush();
-    
-}
-
-//------------------------------------------------
-// write comparison statistics to file
-void printComparisonStatistics(globals &globals, int Kindex) {
-    int K = globals.Kmin+Kindex;
-    
-    globals.outputComparisonStatistics_fileStream << K << "," << process_nan(globals.AIC[Kindex]) << "," << process_nan(globals.BIC[Kindex]) << "," << process_nan(globals.DIC_Spiegelhalter[Kindex]) << "," << process_nan(globals.DIC_Gelman[Kindex]);
-
-    globals.outputComparisonStatistics_fileStream << "\n";
-    globals.outputComparisonStatistics_fileStream.flush();
-    
 }
 
 //------------------------------------------------

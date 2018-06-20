@@ -183,19 +183,6 @@ void readParameters(globals &globals) {
         
         if (params[i]=="outputEvidenceDetails" && i+1<int(params.size()))
             globals.outputEvidenceDetails_fileName = params[i+1];
-        
-        if (params[i]=="outputPosteriorGrouping" && i+1<int(params.size()))
-            globals.outputPosteriorGrouping_fileName = params[i+1];
-        
-        if (params[i]=="outputComparisonStatistics" && i+1<int(params.size()))
-            globals.outputComparisonStatistics_fileName = params[i+1];
-        
-        if (params[i]=="outputMaxLike_alleleFreqs" && i+1<int(params.size()))
-            globals.outputMaxLike_alleleFreqs_fileName = params[i+1];
-        
-        if (params[i]=="outputMaxLike_admixFreqs" && i+1<int(params.size()))
-            globals.outputMaxLike_admixFreqs_fileName = params[i+1];
-        
     }
     
     // extract parameter values (as strings) from file
@@ -212,6 +199,9 @@ void readParameters(globals &globals) {
         
         if (params[i]=="ploidy" && i+1<int(params.size()))
             globals.parameterStrings["ploidy"] = pair<string,int>(params[i+1],1);
+        
+        if (params[i]=="dataFormat" && i+1<int(params.size()))
+            globals.parameterStrings["dataFormat"] = pair<string,int>(params[i+1],1);
         
         if (params[i]=="missingData" && i+1<int(params.size()))
             globals.parameterStrings["missingData"] = pair<string,int>(params[i+1],1);
@@ -231,32 +221,20 @@ void readParameters(globals &globals) {
         if (params[i]=="alpha" && i+1<int(params.size()))
             globals.parameterStrings["alpha"] = pair<string,int>(params[i+1],1);
         
-        if (params[i]=="alphaPropSD" && i+1<int(params.size()))
-            globals.parameterStrings["alphaPropSD"] = pair<string,int>(params[i+1],1);
+        if (params[i]=="GTI_pow" && i+1<int(params.size()))
+            globals.parameterStrings["GTI_pow"] = pair<string,int>(params[i+1],1);
         
         if (params[i]=="exhaustive_on" && i+1<int(params.size()))
             globals.parameterStrings["exhaustive_on"] = pair<string,int>(params[i+1],1);
         
-        if (params[i]=="mainRepeats" && i+1<int(params.size()))
-            globals.parameterStrings["mainRepeats"] = pair<string,int>(params[i+1],1);
+        if (params[i]=="burnin" && i+1<int(params.size()))
+            globals.parameterStrings["burnin"] = pair<string,int>(params[i+1],1);
         
-        if (params[i]=="mainBurnin" && i+1<int(params.size()))
-            globals.parameterStrings["mainBurnin"] = pair<string,int>(params[i+1],1);
+        if (params[i]=="samples" && i+1<int(params.size()))
+            globals.parameterStrings["samples"] = pair<string,int>(params[i+1],1);
         
-        if (params[i]=="mainSamples" && i+1<int(params.size()))
-            globals.parameterStrings["mainSamples"] = pair<string,int>(params[i+1],1);
-        
-        if (params[i]=="mainRungs" && i+1<int(params.size()))
-            globals.parameterStrings["mainRungs"] = pair<string,int>(params[i+1],1);
-        
-        if (params[i]=="EMalgorithm_on" && i+1<int(params.size()))
-            globals.parameterStrings["EMalgorithm_on"] = pair<string,int>(params[i+1],1);
-        
-        if (params[i]=="EMrepeats" && i+1<int(params.size()))
-            globals.parameterStrings["EMrepeats"] = pair<string,int>(params[i+1],1);
-        
-        if (params[i]=="EMiterations" && i+1<int(params.size()))
-            globals.parameterStrings["EMiterations"] = pair<string,int>(params[i+1],1);
+        if (params[i]=="rungs" && i+1<int(params.size()))
+            globals.parameterStrings["rungs"] = pair<string,int>(params[i+1],1);
         
         if (params[i]=="outputLog_on" && i+1<int(params.size()))
             globals.parameterStrings["outputLog_on"] = pair<string,int>(params[i+1],1);
@@ -290,21 +268,6 @@ void readParameters(globals &globals) {
         
         if (params[i]=="outputEvidenceDetails_on" && i+1<int(params.size()))
             globals.parameterStrings["outputEvidenceDetails_on"] = pair<string,int>(params[i+1],1);
-        
-        if (params[i]=="outputPosteriorGrouping_on" && i+1<int(params.size()))
-            globals.parameterStrings["outputPosteriorGrouping_on"] = pair<string,int>(params[i+1],1);
-        
-        if (params[i]=="outputComparisonStatistics_on" && i+1<int(params.size()))
-            globals.parameterStrings["outputComparisonStatistics_on"] = pair<string,int>(params[i+1],1);
-        
-        if (params[i]=="outputEvanno_on" && i+1<int(params.size()))
-            globals.parameterStrings["outputEvanno_on"] = pair<string,int>(params[i+1],1);
-        
-        if (params[i]=="outputMaxLike_alleleFreqs_on" && i+1<int(params.size()))
-            globals.parameterStrings["outputMaxLike_alleleFreqs_on"] = pair<string,int>(params[i+1],1);
-        
-        if (params[i]=="outputMaxLike_admixFreqs_on" && i+1<int(params.size()))
-            globals.parameterStrings["outputMaxLike_admixFreqs_on"] = pair<string,int>(params[i+1],1);
         
         if (params[i]=="outputQmatrix_structureFormat_on" && i+1<int(params.size()))
             globals.parameterStrings["outputQmatrix_structureFormat_on"] = pair<string,int>(params[i+1],1);
@@ -348,10 +311,6 @@ void readCommandLine(globals &globals, int argc, const char * argv[]) {
         readPath("-outputEvidence", globals.outputEvidence_fileName, argc, argv, i);
         readPath("-outputEvidenceNormalised", globals.outputEvidenceNormalised_fileName, argc, argv, i);
         readPath("-outputEvidenceDetails", globals.outputEvidenceDetails_fileName, argc, argv, i);
-        readPath("-outputPosteriorGrouping", globals.outputPosteriorGrouping_fileName, argc, argv, i);
-        readPath("-outputComparisonStatistics", globals.outputComparisonStatistics_fileName, argc, argv, i);
-        readPath("-outputMaxLike_alleleFreqs", globals.outputMaxLike_alleleFreqs_fileName, argc, argv, i);
-        readPath("-outputMaxLike_admixFreqs", globals.outputMaxLike_admixFreqs_fileName, argc, argv, i);
     }
     
     // set file paths
@@ -368,10 +327,6 @@ void readCommandLine(globals &globals, int argc, const char * argv[]) {
     globals.outputEvidence_filePath = globals.outputRoot_filePath + globals.outputEvidence_fileName;
     globals.outputEvidenceNormalised_filePath = globals.outputRoot_filePath + globals.outputEvidenceNormalised_fileName;
     globals.outputEvidenceDetails_filePath = globals.outputRoot_filePath + globals.outputEvidenceDetails_fileName;
-    globals.outputPosteriorGrouping_filePath = globals.outputRoot_filePath + globals.outputPosteriorGrouping_fileName;
-    globals.outputComparisonStatistics_filePath = globals.outputRoot_filePath + globals.outputComparisonStatistics_fileName;
-    globals.outputMaxLike_alleleFreqs_filePath = globals.outputRoot_filePath + globals.outputMaxLike_alleleFreqs_fileName;
-    globals.outputMaxLike_admixFreqs_filePath = globals.outputRoot_filePath + globals.outputMaxLike_admixFreqs_fileName;
     
     // replace parameter values (as strings) with user-defined arguments
     for (int i=1; i<argc; i++) {
@@ -379,21 +334,18 @@ void readCommandLine(globals &globals, int argc, const char * argv[]) {
         readArgument("popCol_on", globals, argc, argv, i);
         readArgument("ploidyCol_on", globals, argc, argv, i);
         readArgument("ploidy", globals, argc, argv, i);
+        readArgument("dataFormat", globals, argc, argv, i);
         readArgument("missingData", globals, argc, argv, i);
         readArgument("Kmin", globals, argc, argv, i);
         readArgument("Kmax", globals, argc, argv, i);
         readArgument("admix_on", globals, argc, argv, i);
         readArgument("fixAlpha_on", globals, argc, argv, i);
         readArgument("alpha", globals, argc, argv, i);
-        readArgument("alphaPropSD", globals, argc, argv, i);
+        readArgument("GTI_pow", globals, argc, argv, i);
         readArgument("exhaustive_on", globals, argc, argv, i);
-        readArgument("mainRepeats", globals, argc, argv, i);
-        readArgument("mainBurnin", globals, argc, argv, i);
-        readArgument("mainSamples", globals, argc, argv, i);
-        readArgument("mainRungs", globals, argc, argv, i);
-        readArgument("EMalgorithm_on", globals, argc, argv, i);
-        readArgument("EMrepeats", globals, argc, argv, i);
-        readArgument("EMiterations", globals, argc, argv, i);
+        readArgument("burnin", globals, argc, argv, i);
+        readArgument("samples", globals, argc, argv, i);
+        readArgument("rungs", globals, argc, argv, i);
         readArgument("outputLog_on", globals, argc, argv, i);
         readArgument("outputLikelihood_on", globals, argc, argv, i);
         readArgument("outputQmatrix_ind_on", globals, argc, argv, i);
@@ -405,11 +357,6 @@ void readCommandLine(globals &globals, int argc, const char * argv[]) {
         readArgument("outputEvidence_on", globals, argc, argv, i);
         readArgument("outputEvidenceNormalised_on", globals, argc, argv, i);
         readArgument("outputEvidenceDetails_on", globals, argc, argv, i);
-        readArgument("outputPosteriorGrouping_on", globals, argc, argv, i);
-        readArgument("outputComparisonStatistics_on", globals, argc, argv, i);
-        readArgument("outputEvanno_on", globals, argc, argv, i);
-        readArgument("outputMaxLike_alleleFreqs_on", globals, argc, argv, i);
-        readArgument("outputMaxLike_admixFreqs_on", globals, argc, argv, i);
         readArgument("outputQmatrix_structureFormat_on", globals, argc, argv, i);
         readArgument("suppressWarning1_on", globals, argc, argv, i);
     }
@@ -444,6 +391,14 @@ void checkParameters(globals &globals, int i) {
                 // check that integer greater than 0
                 checkInteger(it->second.first, globals.ploidy, it->first, globals.outputLog_on, globals.outputLog_fileStream);
                 checkGrZero(it->first, globals.ploidy, globals.outputLog_on, globals.outputLog_fileStream);
+            }
+            if (it->first=="dataFormat") {
+                writeToFile("  dataFormat = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
+                checkInteger(it->second.first, globals.dataFormat, it->first, globals.outputLog_on, globals.outputLog_fileStream);
+                if (globals.dataFormat!=1 && globals.dataFormat!=2) {
+                    cerrAndLog("\nError: 'dataFormat' parameter must be 1 or 2\n", globals.outputLog_on, globals.outputLog_fileStream);
+                    exit(1);
+                }
             }
             if (it->first=="missingData") {
                 writeToFile("  missingData = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
@@ -496,66 +451,40 @@ void checkParameters(globals &globals, int i) {
                 // save vector of values to globals.alpha
                 globals.alpha = alpha;
             }
-            if (it->first=="alphaPropSD") {
-                writeToFile("  alphaPropSD = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
-                
-                // read in potentially multiple values of alphaPropSD
-                vector<double> alphaPropSD;
-                istringstream ss(it->second.first);
-                string line1;
-                int i=0;
-                while (getline(ss, line1, ',')) {
-                    alphaPropSD.push_back(0);
-                    istringstream(line1) >> alphaPropSD[i];
-                    checkGrZero(it->first, alphaPropSD[i], globals.outputLog_on, globals.outputLog_fileStream);
-                    i++;
+            if (it->first=="GTI_pow") {
+                writeToFile("  GTI_pow = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
+                double GTI_pow;
+                istringstream(it->second.first) >> GTI_pow;
+                if (GTI_pow<1.5) {
+                    cerrAndLog("\nError: 'GTI_pow' parameter must be greater than or equal to 1.5\n", globals.outputLog_on, globals.outputLog_fileStream);
+                    exit(1);
                 }
-                
-                // save vector of values to globals.alphaPropSD
-                globals.alphaPropSD = alphaPropSD;
+                globals.GTI_pow = GTI_pow;
             }
             if (it->first=="exhaustive_on") {
                 writeToFile("  exhaustive_on = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
                 checkBoolean(it->second.first, globals.exhaustive_on, it->first, globals.outputLog_on, globals.outputLog_fileStream);
             }
-            if (it->first=="mainBurnin") {
-                writeToFile("  mainBurnin = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
+            if (it->first=="burnin") {
+                writeToFile("  burnin = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
                 
                 // check that integer greater than or equal to 0
-                checkInteger(it->second.first, globals.mainBurnin, it->first, globals.outputLog_on, globals.outputLog_fileStream);
-                checkGrEqZero(it->first, globals.mainBurnin, globals.outputLog_on, globals.outputLog_fileStream);
+                checkInteger(it->second.first, globals.burnin, it->first, globals.outputLog_on, globals.outputLog_fileStream);
+                checkGrEqZero(it->first, globals.burnin, globals.outputLog_on, globals.outputLog_fileStream);
             }
-            if (it->first=="mainSamples") {
-                writeToFile("  mainSamples = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
+            if (it->first=="samples") {
+                writeToFile("  samples = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
                 
                 // check that integer greater than 0
-                checkInteger(it->second.first, globals.mainSamples, it->first, globals.outputLog_on, globals.outputLog_fileStream);
-                checkGrZero(it->first, globals.mainSamples, globals.outputLog_on, globals.outputLog_fileStream);
+                checkInteger(it->second.first, globals.samples, it->first, globals.outputLog_on, globals.outputLog_fileStream);
+                checkGrZero(it->first, globals.samples, globals.outputLog_on, globals.outputLog_fileStream);
             }
-            if (it->first=="mainRungs") {
-                writeToFile("  mainRungs = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
+            if (it->first=="rungs") {
+                writeToFile("  rungs = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
                 
                 // check that integer greater than 0
-                checkInteger(it->second.first, globals.mainRungs, it->first, globals.outputLog_on, globals.outputLog_fileStream);
-                checkGrZero(it->first, globals.mainRungs, globals.outputLog_on, globals.outputLog_fileStream);
-            }
-            if (it->first=="EMalgorithm_on") {
-                writeToFile("  EMalgorithm_on = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
-                checkBoolean(it->second.first, globals.EMalgorithm_on, it->first, globals.outputLog_on, globals.outputLog_fileStream);
-            }
-            if (it->first=="EMrepeats") {
-                writeToFile("  EMrepeats = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
-                
-                // check that integer greater than 0
-                checkInteger(it->second.first, globals.EMrepeats, it->first, globals.outputLog_on, globals.outputLog_fileStream);
-                checkGrZero(it->first, globals.EMrepeats, globals.outputLog_on, globals.outputLog_fileStream);
-            }
-            if (it->first=="EMiterations") {
-                writeToFile("  EMiterations = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
-                
-                // check that integer greater than 0
-                checkInteger(it->second.first, globals.EMiterations, it->first, globals.outputLog_on, globals.outputLog_fileStream);
-                checkGrZero(it->first, globals.EMiterations, globals.outputLog_on, globals.outputLog_fileStream);
+                checkInteger(it->second.first, globals.rungs, it->first, globals.outputLog_on, globals.outputLog_fileStream);
+                checkGrZero(it->first, globals.rungs, globals.outputLog_on, globals.outputLog_fileStream);
             }
             if (it->first=="outputLog_on") {
                 writeToFile("  outputLog_on = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
@@ -601,22 +530,6 @@ void checkParameters(globals &globals, int i) {
                 writeToFile("  outputEvidenceDetails_on = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
                 checkBoolean(it->second.first, globals.outputEvidenceDetails_on, it->first, globals.outputLog_on, globals.outputLog_fileStream);
             }
-            if (it->first=="outputPosteriorGrouping_on") {
-                writeToFile("  outputPosteriorGrouping_on = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
-                checkBoolean(it->second.first, globals.outputPosteriorGrouping_on, it->first, globals.outputLog_on, globals.outputLog_fileStream);
-            }
-            if (it->first=="outputComparisonStatistics_on") {
-                writeToFile("  outputComparisonStatistics_on = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
-                checkBoolean(it->second.first, globals.outputComparisonStatistics_on, it->first, globals.outputLog_on, globals.outputLog_fileStream);
-            }
-            if (it->first=="outputMaxLike_alleleFreqs_on") {
-                writeToFile("  outputMaxLike_alleleFreqs_on = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
-                checkBoolean(it->second.first, globals.outputMaxLike_alleleFreqs_on, it->first, globals.outputLog_on, globals.outputLog_fileStream);
-            }
-            if (it->first=="outputMaxLike_admixFreqs_on") {
-                writeToFile("  outputMaxLike_admixFreqs_on = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
-                checkBoolean(it->second.first, globals.outputMaxLike_admixFreqs_on, it->first, globals.outputLog_on, globals.outputLog_fileStream);
-            }
             if (it->first=="outputQmatrix_structureFormat_on") {
                 writeToFile("  outputQmatrix_structureFormat_on = "+it->second.first+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
                 checkBoolean(it->second.first, globals.outputQmatrix_structureFormat_on, it->first, globals.outputLog_on, globals.outputLog_fileStream);
@@ -629,16 +542,19 @@ void checkParameters(globals &globals, int i) {
     }
 	
     // if no parameters defined by user
-    if (defined==0)
+    if (defined==0) {
         writeToFile("  (none)\n", globals.outputLog_on, globals.outputLog_fileStream);
+    }
     
     // print to screen number of parameters of each type
-    if (i==0)
+    if (i==0) {
         cout << "  " << defined << " parameters set to default values\n";
-    else if (i==1)
+    } else if (i==1) {
         cout << "  " << defined << " parameters read in from file\n";
-    else if (i==2)
+    } else if (i==2) {
         cout << "  " << defined << " parameters defined on command line\n";
+    }
+    
 }
 
 //------------------------------------------------
@@ -725,6 +641,9 @@ void readData(globals &globals) {
         coutAndLog("  column "+to_string((long long)pop_startRead+1)+" = population of origin\n", globals.outputLog_on, globals.outputLog_fileStream);
     if (ploidy_startRead!=-1)
         coutAndLog("  column "+to_string((long long)ploidy_startRead+1)+" = ploidy\n", globals.outputLog_on, globals.outputLog_fileStream);
+    if (globals.dataFormat==2) {
+        coutAndLog("  dataFormat = single line per individual\n", globals.outputLog_on, globals.outputLog_fileStream);
+    }
     
     // split rawData into special columns and data matrix
     vector<string> indLabels_raw, pop_raw, ploidy_raw;
@@ -754,16 +673,13 @@ void readData(globals &globals) {
         rawData.push_back(rawData_line);
     }
     
-    // finally define number of loci
-    globals.loci = int(rawData[0].size());
-    
     // convert ploidy labels into integer format
     vector<int> ploidy_raw_int(rawEntries.size(),globals.ploidy);
     if (globals.ploidyCol_on) {
         for (int i=0; i<int(ploidy_raw.size()); i++) {
             double param_double=0;
             istringstream(ploidy_raw[i]) >> param_double;
-            if (round(double(param_double))==param_double && round(double(param_double))>=0) {
+            if (my_round(double(param_double))==param_double && my_round(double(param_double))>=0) {
                 ploidy_raw_int[i] = int(param_double);
             } else {
                 cerrAndLog("\nError: all ploidy values in data file must be positive integers\n", globals.outputLog_on, globals.outputLog_fileStream);
@@ -772,10 +688,57 @@ void readData(globals &globals) {
         }
     }
     
+    // single-line format
+    if (globals.dataFormat==2) {
+        
+        // copy current raw objects
+        vector<string> indLabels_copy = indLabels_raw;
+        vector<string> pop_copy = pop_raw;
+        vector<int> ploidy_int_copy = ploidy_raw_int;
+        vector< vector<string> > rawData_copy = rawData;
+        
+        // clear raw objects
+        indLabels_raw.clear();
+        pop_raw.clear();
+        ploidy_raw_int.clear();
+        
+        // expand rawData as needed
+        int ploidy_int_copy_sum = sum(ploidy_int_copy);
+        rawData = vector< vector<string> >(ploidy_int_copy_sum);
+        
+        int startRow = 0;
+        for (int i=0; i<int(rawData_copy.size()); i++) {
+            // check that sufficient entries given ploidy
+            if ( (rawData_copy[i].size()%ploidy_int_copy[i])!=0 ) {
+                cerrAndLog("\nError: number of elements in single-line format not compatible with given ploidy\n", globals.outputLog_on, globals.outputLog_fileStream);
+            }
+            // add to indLabels and pop
+            for (int j=0; j<ploidy_int_copy[i]; j++) {
+                indLabels_raw.push_back(indLabels_copy[i]);
+                pop_raw.push_back(pop_copy[i]);
+                ploidy_raw_int.push_back(ploidy_int_copy[i]);
+            }
+            // add data
+            int loci = int(rawData_copy[i].size()/ploidy_int_copy[i]);
+            int j2=0;
+            for (int j=0; j<loci; j++) {
+                for (int i2=0; i2<ploidy_int_copy[i]; i2++) {
+                    rawData[startRow+i2].push_back(rawData_copy[i][j2]);
+                    j2++;
+                }
+            }
+            startRow += ploidy_int_copy[i];
+        }
+        
+    }
+    
+    // define number of loci
+    globals.loci = int(rawData[0].size());
+    
     // check that ploidy values make sense. Ploidy must be either defined on the first row of an individual (ploidy_format==1), or defined equally for all rows of an individual (ploidy_format==2).
     int thisPloidy=0, countDown=0, ploidy_format=0;
     bool ploidyError = false;
-    for (int i=0; i<int(rawEntries.size()); i++) {
+    for (int i=0; i<int(rawData.size()); i++) {
         // if new individual
         if (countDown==0) {
             if (ploidy_raw_int[i]!=0) {
@@ -819,12 +782,12 @@ void readData(globals &globals) {
         string thisPop;
         int pop_format=0;
         bool popError = false;
-        for (int i=0; i<int(rawEntries.size()); i++) {
+        for (int i=0; i<int(rawData.size()); i++) {
             // if new individual
             if (countDown==0) {
                 thisPop = pop_raw[i];
                 countDown = ploidy_raw_int[i]-1;
-            // if not new individual
+                // if not new individual
             } else {
                 if (pop_raw[i]=="") {
                     if (pop_format==0 || pop_format==1) {
@@ -871,7 +834,7 @@ void readData(globals &globals) {
     // reformat data into simple list: data[individual][locus][gene copy]. Recode values to simple list of integers, with 0 meaning missing data. Keep record of missing data elements in data_missing (1=missing, 0=present). Store indLabels_vec, pop_vec, ploidy_vec and missing_vec values.
     countDown=0;
     int ind=-1, gene_copy=0;
-    for (int i=0; i<int(rawEntries.size()); i++) {
+    for (int i=0; i<int(rawData.size()); i++) {
         // if new individual
         if (countDown==0) {
             ind++;
@@ -895,7 +858,7 @@ void readData(globals &globals) {
                     globals.data[ind][l][gene_copy] = whichFirst(globals.uniqueAlleles[l],rawData[i][l])+1;
                 }
             }
-        // if not new individual
+            // if not new individual
         } else {
             countDown--;
             gene_copy++;
@@ -961,7 +924,7 @@ void readData(globals &globals) {
     alleles << "}\n";
     coutAndLog(alleles.str(), globals.outputLog_on, globals.outputLog_fileStream);
     
-    coutAndLog("  missing observations = "+to_string((long long)missingDataCount)+string(" of ")+to_string((long long)sum(globals.ploidy_vec)*globals.loci)+string("\n\n"), globals.outputLog_on, globals.outputLog_fileStream);    
+    coutAndLog("  missing observations = "+to_string((long long)missingDataCount)+string(" of ")+to_string((long long)sum(globals.ploidy_vec)*globals.loci)+string("\n\n"), globals.outputLog_on, globals.outputLog_fileStream);
     
 }
 
@@ -972,13 +935,8 @@ void checkOptions(globals &globals) {
     /*
      The following checks are carried out (in this order):
      - popCol_on=true if producing Qmatrix_pop files
-     - admix_on=true if
-        - producing Qmatrix_gene files
-        - producing ML admixture freqs
+     - admix_on=true if producing Qmatrix_gene files
      - outputQmatrix_?_on=true if outputQmatrixError_?_on=true
-     - EMalgorithm_on=true if
-        - producing model comp stats
-        - producing ML output
      - if using exhaustive approach, check that number of partitions required to sum over is reasonable. Otherwise throw warning
      - ensure that alpha and alphaPropSD vectors are of length 1 or (Kmax-Kmin+1). If former then duplicate value as needed.
      */
@@ -995,27 +953,9 @@ void checkOptions(globals &globals) {
         exit(1);
     }
     
-    // force admix_on=true if producing maximum likelihood admixture frequencies
-    if (!globals.admix_on && globals.outputMaxLike_admixFreqs_on) {
-        cerrAndLog("\nError: admixture model must be turned on in order to produce maximum likelihood admixture frequency output. Either switch to the admixture model (by setting admix_on to true) or stop producing maximum likelihood admixture frequency output (by setting outputMaxLike_admixFreqs_on to false).\n", globals.outputLog_on, globals.outputLog_fileStream);
-        exit(1);
-    }
-    
     // force outputQmatrix_?_on=true if outputQmatrixError_?_on=true for all Qmatrix types
     if ((globals.outputQmatrixError_ind_on && !globals.outputQmatrix_ind_on) || (globals.outputQmatrixError_pop_on && !globals.outputQmatrix_pop_on) || (globals.outputQmatrixError_gene_on && !globals.outputQmatrix_gene_on)) {
         cerrAndLog("\nError: if outputQmatrixError options are turned on then the corresponding outputQmatrix options must also be turned on.\n", globals.outputLog_on, globals.outputLog_fileStream);
-        exit(1);
-    }
-    
-    // force EMalgorithm_on=true if producing model comparison statistics
-    if (!globals.EMalgorithm_on && globals.outputComparisonStatistics_on) {
-        cerrAndLog("\nError: EM algorithm must be turned on in order to compute model comparison statistics. Either turn on the EM algorithm (by setting EMalgorithm_on to true) or stop producing model comparison statistics (by setting outputComparisonStatistics_on to false).\n", globals.outputLog_on, globals.outputLog_fileStream);
-        exit(1);
-    }
-    
-    // force EMalgorithm_on=true if producing maximum likelihood output
-    if (!globals.EMalgorithm_on && (globals.outputMaxLike_alleleFreqs_on || globals.outputMaxLike_admixFreqs_on)) {
-        cerrAndLog("\nError: EM algorithm must be turned on in order to produce maximum likelihood output files. Either turn on the EM algorithm (by setting EMalgorithm_on to true) or stop producing maximum likelihood output (by setting outputMaxLike_alleleFreqs_on and outputMaxLike_admixFreqs_on to false).\n", globals.outputLog_on, globals.outputLog_fileStream);
         exit(1);
     }
     
@@ -1048,13 +988,6 @@ void checkOptions(globals &globals) {
         globals.alpha = vector<double>(globals.Kmax-globals.Kmin+1, globals.alpha[0]);
     } else if (int(globals.alpha.size())!=(globals.Kmax-globals.Kmin+1)) {
         cerrAndLog("\nWarning: alpha must contain either a single value to apply to all K, or a comma-separated list of values of length (Kmax-Kmin+1) to apply to each K individually.\n", globals.outputLog_on, globals.outputLog_fileStream);
-        exit(1);
-    }
-    
-    if (int(globals.alphaPropSD.size())==1) {
-        globals.alphaPropSD = vector<double>(globals.Kmax-globals.Kmin+1, globals.alphaPropSD[0]);
-    } else if (int(globals.alphaPropSD.size())!=(globals.Kmax-globals.Kmin+1)) {
-        cerrAndLog("\nWarning: alphaPropSD must contain either a single value to apply to all K, or a comma-separated list of values of length (Kmax-Kmin+1).\n", globals.outputLog_on, globals.outputLog_fileStream);
         exit(1);
     }
     

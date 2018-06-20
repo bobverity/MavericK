@@ -45,10 +45,6 @@ public:
     std::string outputEvidence_fileName;
     std::string outputEvidenceNormalised_fileName;
     std::string outputEvidenceDetails_fileName;
-    std::string outputPosteriorGrouping_fileName;
-    std::string outputComparisonStatistics_fileName;
-    std::string outputMaxLike_alleleFreqs_fileName;
-    std::string outputMaxLike_admixFreqs_fileName;
     
     std::string inputRoot_filePath;
     std::string outputRoot_filePath;
@@ -65,11 +61,6 @@ public:
     std::string outputEvidence_filePath;
     std::string outputEvidenceNormalised_filePath;
     std::string outputEvidenceDetails_filePath;
-    std::string outputPosteriorGrouping_filePath;
-    std::string outputComparisonStatistics_filePath;
-    std::string outputMaxLike_alleleFreqs_filePath;
-    std::string outputMaxLike_admixFreqs_filePath;
-    std::string junk_filePath;
     
     // file streams
     std::ifstream parameters_fileStream;
@@ -85,12 +76,6 @@ public:
     std::ofstream outputEvidence_fileStream;
     std::ofstream outputEvidenceNormalised_fileStream;
     std::ofstream outputEvidenceDetails_fileStream;
-    std::ofstream outputPosteriorGrouping_fileStream;
-    std::ofstream outputComparisonStatistics_fileStream;
-    std::ofstream outputMaxLike_alleleFreqs_fileStream;
-    std::ofstream outputMaxLike_admixFreqs_fileStream;
-    std::ofstream junk_fileStream;
-    
     
     // parameters from file
     std::map< std::string, std::pair<std::string,int> > parameterStrings;
@@ -99,6 +84,7 @@ public:
     bool popCol_on;
     bool ploidyCol_on;
     int ploidy;
+    int dataFormat;
     std::string missingData;
     
     int Kmin;
@@ -106,17 +92,13 @@ public:
     bool admix_on;
     bool fixAlpha_on;
     std::vector<double> alpha;
-    std::vector<double> alphaPropSD;
+    double GTI_pow;
     
     bool exhaustive_on;
     
-    int mainBurnin;
-    int mainSamples;
-    int mainRungs;
-    
-    bool EMalgorithm_on;
-    int EMrepeats;
-    int EMiterations;
+    int burnin;
+    int samples;
+    int rungs;
     
     bool outputLog_on;
     bool outputLikelihood_on;
@@ -129,10 +111,6 @@ public:
     bool outputEvidence_on;
     bool outputEvidenceNormalised_on;
     bool outputEvidenceDetails_on;
-    bool outputPosteriorGrouping_on;
-    bool outputComparisonStatistics_on;
-    bool outputMaxLike_alleleFreqs_on;
-    bool outputMaxLike_admixFreqs_on;
     
     bool outputQmatrix_structureFormat_on;
     bool suppressWarning1_on;
@@ -164,11 +142,6 @@ public:
     std::vector< std::vector< std::vector<double> > > QmatrixError_pop;
     
     std::vector<double> logEvidence_exhaustive;
-    std::vector<double> logEvidence_harmonic;
-    std::vector<double> structure_loglike_mean;
-    std::vector<double> structure_loglike_var;
-    std::vector<double> logEvidence_structure;
-    
     std::vector< std::vector<double> > TIpoint_mean;
     std::vector< std::vector<double> > TIpoint_var;
     std::vector< std::vector<double> > TIpoint_SE;
@@ -176,24 +149,9 @@ public:
     std::vector<double> logEvidence_TI_SE;
     
     std::vector<double> posterior_exhaustive;
-    std::vector<double> posterior_harmonic_mean;
-    std::vector<double> posterior_harmonic_LL;
-    std::vector<double> posterior_harmonic_UL;
-    std::vector<double> posterior_structure_mean;
-    std::vector<double> posterior_structure_LL;
-    std::vector<double> posterior_structure_UL;
     std::vector<double> posterior_TI_mean;
     std::vector<double> posterior_TI_LL;
     std::vector<double> posterior_TI_UL;
-    
-    double maxLike;
-    std::vector< std::vector< std::vector<double> > > max_alleleFreqs;
-    std::vector< std::vector<double> > max_admixFreqs;
-    
-    std::vector<double> AIC;
-    std::vector<double> BIC;
-    std::vector<double> DIC_Spiegelhalter;
-    std::vector<double> DIC_Gelman;
     
     
     // PUBLIC FUNCTIONS

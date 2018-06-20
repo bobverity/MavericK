@@ -39,10 +39,6 @@ globals::globals() {
     outputEvidence_fileName = "outputEvidence.csv";
     outputEvidenceNormalised_fileName = "outputEvidenceNormalised.csv";
     outputEvidenceDetails_fileName = "outputEvidenceDetails.csv";
-    outputPosteriorGrouping_fileName = "outputPosteriorGrouping.csv";
-    outputComparisonStatistics_fileName = "outputComparisonStatistics.csv";
-    outputMaxLike_alleleFreqs_fileName = "outputMaxLike_alleleFreqs.csv";
-    outputMaxLike_admixFreqs_fileName = "outputMaxLike_admixFreqs.csv";
     
     inputRoot_filePath = masterRoot_filePath + inputRoot_fileName;
     outputRoot_filePath = masterRoot_filePath + outputRoot_fileName;
@@ -59,16 +55,13 @@ globals::globals() {
     outputEvidence_filePath = outputRoot_filePath + outputEvidence_fileName;
     outputEvidenceNormalised_filePath = outputRoot_filePath + outputEvidenceNormalised_fileName;
     outputEvidenceDetails_filePath = outputRoot_filePath + outputEvidenceDetails_fileName;
-    outputComparisonStatistics_filePath = outputRoot_filePath + outputComparisonStatistics_fileName;
-    outputMaxLike_alleleFreqs_filePath = outputRoot_filePath + outputMaxLike_alleleFreqs_fileName;
-    outputMaxLike_admixFreqs_filePath = outputRoot_filePath + outputMaxLike_admixFreqs_fileName;
-    outputPosteriorGrouping_filePath = outputRoot_filePath + outputPosteriorGrouping_fileName;
-
+    
     // define all default parameter values as pair<string,int> objects, as well as in final class-specific form
     parameterStrings["headerRow_on"] = pair<string,int>("false",0); headerRow_on = false;
     parameterStrings["popCol_on"] = pair<string,int>("false",0); popCol_on = false;
     parameterStrings["ploidyCol_on"] = pair<string,int>("false",0); ploidyCol_on = false;
     parameterStrings["ploidy"] = pair<string,int>("2",0); ploidy = 2;
+    parameterStrings["dataFormat"] = pair<string,int>("1",0); dataFormat = 1;
     parameterStrings["missingData"] = pair<string,int>("-9",0); missingData = "-9";
     
     parameterStrings["Kmin"] = pair<string,int>("1",0); Kmin = 1;
@@ -76,17 +69,13 @@ globals::globals() {
     parameterStrings["admix_on"] = pair<string,int>("false",0); admix_on = false;
     parameterStrings["fixAlpha_on"] = pair<string,int>("true",0); fixAlpha_on = true;
     parameterStrings["alpha"] = pair<string,int>("1.0",0); alpha = vector<double>(1,1.0);
-    parameterStrings["alphaPropSD"] = pair<string,int>("0.1",0); vector<double> alphaPropSD(1,0.1);
+    parameterStrings["GTI_pow"] = pair<string,double>("3",0); GTI_pow = 3;
     
     parameterStrings["exhaustive_on"] = pair<string,int>("false",0); exhaustive_on = false;
     
-    parameterStrings["mainBurnin"] = pair<string,int>("100",0); mainBurnin = 100;
-    parameterStrings["mainSamples"] = pair<string,int>("1000",0); mainSamples = 1000;
-    parameterStrings["mainRungs"] = pair<string,int>("10",0); mainRungs = 10;
-    
-    parameterStrings["EMalgorithm_on"] = pair<string,int>("false",0); EMalgorithm_on = false;
-    parameterStrings["EMrepeats"] = pair<string,int>("10",0); EMrepeats = 10;
-    parameterStrings["EMiterations"] = pair<string,int>("100",0); EMiterations = 100;
+    parameterStrings["burnin"] = pair<string,int>("100",0); burnin = 100;
+    parameterStrings["samples"] = pair<string,int>("1000",0); samples = 1000;
+    parameterStrings["rungs"] = pair<string,int>("10",0); rungs = 10;
     
     parameterStrings["outputLog_on"] = pair<string,int>("true",0); outputLog_on = true;
     parameterStrings["outputLikelihood_on"] = pair<string,int>("false",0); outputLikelihood_on = false;
@@ -99,10 +88,6 @@ globals::globals() {
     parameterStrings["outputEvidence_on"] = pair<string,int>("true",0); outputEvidence_on = true;
     parameterStrings["outputEvidenceNormalised_on"] = pair<string,int>("true",0); outputEvidenceNormalised_on = true;
     parameterStrings["outputEvidenceDetails_on"] = pair<string,int>("false",0); outputEvidenceDetails_on = false;
-    parameterStrings["outputPosteriorGrouping_on"] = pair<string,int>("false",0); outputPosteriorGrouping_on = false;
-    parameterStrings["outputComparisonStatistics_on"] = pair<string,int>("false",0); outputComparisonStatistics_on = false;
-    parameterStrings["outputMaxLike_alleleFreqs_on"] = pair<string,int>("false",0); outputMaxLike_alleleFreqs_on = false;
-    parameterStrings["outputMaxLike_admixFreqs_on"] = pair<string,int>("false",0); outputMaxLike_admixFreqs_on = false;
     
     parameterStrings["outputQmatrix_structureFormat_on"] = pair<string,int>("false",0); outputQmatrix_structureFormat_on = false;
     parameterStrings["suppressWarning1_on"] = pair<string,int>("false",0); suppressWarning1_on = false;
@@ -136,31 +121,16 @@ void initialiseGlobals(globals &globals) {
     // evidence estimates
     vector<double> nanVec = vector<double>(globals.Kmax-globals.Kmin+1,-sqrt(-1.0));
     globals.logEvidence_exhaustive = nanVec;
-    globals.logEvidence_harmonic = vector<double>(globals.Kmax-globals.Kmin+1);
-    globals.structure_loglike_mean = vector<double>(globals.Kmax-globals.Kmin+1);
-    globals.structure_loglike_var = vector<double>(globals.Kmax-globals.Kmin+1);
-    globals.logEvidence_structure = vector<double>(globals.Kmax-globals.Kmin+1);
     
-    globals.TIpoint_mean = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.mainRungs,-sqrt(-1.0)));
-    globals.TIpoint_var = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.mainRungs,-sqrt(-1.0)));
-    globals.TIpoint_SE = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.mainRungs,-sqrt(-1.0)));
+    globals.TIpoint_mean = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.rungs,-sqrt(-1.0)));
+    globals.TIpoint_var = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.rungs,-sqrt(-1.0)));
+    globals.TIpoint_SE = vector< vector<double> >(globals.Kmax-globals.Kmin+1,vector<double>(globals.rungs,-sqrt(-1.0)));
     globals.logEvidence_TI = nanVec;
     globals.logEvidence_TI_SE = nanVec;
     
     globals.posterior_exhaustive = nanVec;
-    globals.posterior_harmonic_mean = nanVec;
-    globals.posterior_harmonic_LL = nanVec;
-    globals.posterior_harmonic_UL = nanVec;
-    globals.posterior_structure_mean = nanVec;
-    globals.posterior_structure_LL = nanVec;
-    globals.posterior_structure_UL = nanVec;
     globals.posterior_TI_mean = nanVec;
     globals.posterior_TI_LL = nanVec;
     globals.posterior_TI_UL = nanVec;
-    
-    globals.AIC = nanVec;
-    globals.BIC = nanVec;
-    globals.DIC_Gelman = nanVec;
-    globals.DIC_Spiegelhalter = nanVec;
     
 }

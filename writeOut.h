@@ -38,23 +38,6 @@ void printEvidenceDetails(globals &globals, int Kindex);
 void printEvidenceNormalised(globals &globals);
 
 //------------------------------------------------
-// write max-like allele frequencies to file
-void printMaxLike_alleleFreqs(globals &globals, int Kindex);
-
-//------------------------------------------------
-// write max-like admixture frequencies to file
-void printMaxLike_admixFreqs(globals &globals, int Kindex);
-
-//------------------------------------------------
-// write comparison statistics to file
-void printComparisonStatistics(globals &globals, int Kindex);
-
-//------------------------------------------------
-// write Evanno's delta K to file
-void printEvanno(globals &globals, int Kindex);
-
-
-//------------------------------------------------
 // write gene-level Qmatrix file (MCMCobject_admixture only)
 void printQmatrix_gene(globals &globals, int Kindex);
 

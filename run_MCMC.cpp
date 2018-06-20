@@ -21,7 +21,7 @@ void run_MCMC_noAdmixture(globals &globals, int Kindex) {
     
     // special case if K==1
     if (K==1) {
-        for (int TIrep=0; TIrep<globals.mainRungs; TIrep++) {
+        for (int TIrep=0; TIrep<globals.rungs; TIrep++) {
             globals.TIpoint_mean[Kindex][TIrep] = globals.logEvidence_exhaustive[Kindex];
             globals.TIpoint_var[Kindex][TIrep] = 0;
             globals.TIpoint_SE[Kindex][TIrep] = 0;
@@ -32,7 +32,7 @@ void run_MCMC_noAdmixture(globals &globals, int Kindex) {
     }
     
     // perform MCMC
-    MCMC_noAdmixture mainMCMC(globals, Kindex, globals.mainRungs);
+    MCMC_noAdmixture mainMCMC(globals, Kindex);
     mainMCMC.perform_MCMC(globals);
     
     // save Qmatrix values
@@ -48,14 +48,6 @@ void run_MCMC_noAdmixture(globals &globals, int Kindex) {
             }
         }
     }
-    
-    // save harmonic mean of marginal likelihoods
-    globals.logEvidence_harmonic[Kindex] = mainMCMC.harmonic;
-    
-    // save Structure estimator
-    globals.structure_loglike_mean[Kindex] = mainMCMC.structure_loglike_mean;
-    globals.structure_loglike_var[Kindex] = mainMCMC.structure_loglike_var;
-    globals.logEvidence_structure[Kindex] = mainMCMC.logEvidence_structure;
     
     // save TI results to global variable
     globals.TIpoint_mean[Kindex] = mainMCMC.TIpoint_mean;
@@ -72,7 +64,7 @@ void run_MCMC_admixture(globals &globals, int Kindex) {
     
     // special case if K==1
     if (K==1) {
-        for (int TIrep=0; TIrep<globals.mainRungs; TIrep++) {
+        for (int TIrep=0; TIrep<globals.rungs; TIrep++) {
             globals.TIpoint_mean[Kindex][TIrep] = globals.logEvidence_exhaustive[Kindex];
             globals.TIpoint_var[Kindex][TIrep] = 0;
             globals.TIpoint_SE[Kindex][TIrep] = 0;
@@ -83,7 +75,7 @@ void run_MCMC_admixture(globals &globals, int Kindex) {
     }
     
     // perform MCMC
-    MCMC_admixture mainMCMC(globals, Kindex, globals.mainRungs);
+    MCMC_admixture mainMCMC(globals, Kindex);
     mainMCMC.perform_MCMC(globals);
     
     // save Qmatrix values
@@ -99,14 +91,6 @@ void run_MCMC_admixture(globals &globals, int Kindex) {
             }
         }
     }
-    
-    // save harmonic mean of marginal likelihoods
-    globals.logEvidence_harmonic[Kindex] = mainMCMC.harmonic;
-    
-    // save Structure estimator
-    globals.structure_loglike_mean[Kindex] = mainMCMC.structure_loglike_mean;
-    globals.structure_loglike_var[Kindex] = mainMCMC.structure_loglike_var;
-    globals.logEvidence_structure[Kindex] = mainMCMC.logEvidence_structure;
     
     // save TI results to global variable
     globals.TIpoint_mean[Kindex] = mainMCMC.TIpoint_mean;

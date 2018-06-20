@@ -35,7 +35,7 @@ public:
     std::vector<int> J;
     std::vector<int> ploidy_vec;
     double lambda;
-    double beta;
+    double beta_raised;
     
     // grouping
     std::vector<int> group;
@@ -46,13 +46,6 @@ public:
     std::vector< std::vector< std::vector<int> > > alleleCounts;
     std::vector< std::vector<int> > alleleCountsTotals;
     std::vector< std::vector< std::vector<double> > > alleleFreqs;
-    
-    // scalars for storing current status
-    int thisData1;
-    int thisData2;
-    int thisGroup;
-    int thisAlleleCounts;
-    int thisAlleleCountsTotals;
     
     // assignment probabilities
     std::vector<double> logProbVec;
@@ -72,7 +65,7 @@ public:
     
     // constructors
     particle_noAdmixture();
-    particle_noAdmixture(globals &globals, int _K, double _beta);
+    particle_noAdmixture(globals &globals, int _K, double _beta_raised);
     
     // reset
     void reset();

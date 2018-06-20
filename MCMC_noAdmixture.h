@@ -33,17 +33,17 @@ public:
     int K;
     int n;
     bool outputQmatrix_pop_on;
+    bool outputLikelihood_on;
     int nPops;
     int burnin;
     int samples;
+    double GTI_pow;
     
     int rungs;
-    std::vector<int> rungOrder;
-    int rung1;
-    int rung2;
-    std::vector<double> betaVec;
-    std::vector<particle_noAdmixture> particleVec;
-    std::vector<double> acceptanceRate;
+    std::vector<int> rung_order;
+    std::vector<double> beta_raised_vec;
+    std::vector<particle_noAdmixture> particle_vec;
+    std::vector<double> coupling_accept;
     
     // likelihoods for each rung
     std::vector<double> logLikeGroup_sum;
@@ -68,20 +68,13 @@ public:
     std::vector<double> autoCorr;
     std::vector<double> ESS;
     
-    // harmonic mean estimator
-    double harmonic;
-    
-    // Structure estimator
-    double structure_loglike_mean;
-    double structure_loglike_var;
-    double logEvidence_structure;
-    
     // TI point estimates for each rung
     std::vector<double> TIpoint_mean;
     std::vector<double> TIpoint_var;
     std::vector<double> TIpoint_SE;
     
-    // overall TI point estimate and SE
+    // overall TI estimate and SE
+    std::vector<double> logEvidence_TI_store;
     double logEvidence_TI;
     double logEvidence_TI_var;
     double logEvidence_TI_SE;
@@ -90,7 +83,6 @@ public:
     std::vector< std::vector<double> > costMat;
     std::vector<int> bestPerm;
     std::vector<int> bestPermOrder;
-    
     std::vector<int>edgesLeft;
     std::vector<int>edgesRight;
     std::vector<int>blockedLeft;
@@ -100,7 +92,7 @@ public:
     // PUBLIC FUNCTIONS
     
     // constructor
-    MCMC_noAdmixture(globals &globals, int _Kindex, int _rungs);
+    MCMC_noAdmixture(globals &globals, int _Kindex);
     
     // perform MCMC
     void perform_MCMC(globals &globals);

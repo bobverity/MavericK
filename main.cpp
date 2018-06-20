@@ -11,7 +11,6 @@
 //
 // ---------------------------------------------------------------------------
 /*
- 
  Ideas for how to speed up and reorganise program:
  
  - data and groupings start from index 0
@@ -19,7 +18,6 @@
  - fancy mixture modelling techniques, such as linking over K
  - do I need alleleCountsTotals at all? (Yes, I think so). What about admixCountsTotals?
  - currently I am temporarily adding and subtracting elements when calculating likelihood, then adding again once K chosen. Avoid add-subtract-add step if K does not change? Under admixture model?
- 
 */
 // NOTE - now using shortcut method of label fixing, in which condition probabilities within an iteration are not recalculated pior to using Stephens' method.
 
@@ -28,7 +26,6 @@
 #include <ctime>
 
 // include MavericK header files
-#include "EM_algorithm.h"
 #include "exhaustive.h"
 #include "globals.h"
 #include "Hungarian.h"
@@ -45,12 +42,8 @@ using namespace std;
 vector< vector<double> > log_lookup;
 vector<double> log_lookup_0;
 
-int test1 = 0;
-int test2 = 0;
-
 // main function
-int main(int argc, const char * argv[])
-{
+int main(int argc, const char * argv[]) {
     
     // start program
     time_t ctt = time(0); // current time
@@ -62,17 +55,17 @@ int main(int argc, const char * argv[])
     cout << "------------------------------------------\n\n";
     
     // start timing program
-    clock_t start = clock();
+    time_t tstart, tend;
+    time(&tstart);
     
     //---------------------------------------------------------------------------------------------------
     
     // The logic of importing parameter values from file proceeds in the following steps:
     //  1. Define default values for all parameters in the form of pair<string,int> objects. The first element stores the default value of the parameter as a string, while the second element is used to keep track of where the parameter is defined (1=default, 2=parameters file, 3=command line). Note that all parameter values are stored as strings at this stage.
     //  2. Look through command line arguments. Read just those arguments needed to locate the parameters file.
-    //  3. Read in the parameters file (all values are read in as strings). For all parameters in this file that match valid parameter names, overwrite the pair<string,int> with new values, and set the int element to 2.
-    //  4. Look through all remaining command line arguments. For all arguments that match valid parameter names, overwrite the pair<string,int> with new values, and set the int element to 3.
+    //  3. Read in the parameters file (all values are read in as strings). For all parameters in this file that match valid parameter names, overwrite the pair<string,int> with new values, and set the int element to 2 to indicate that these have been read in from file.
+    //  4. Look through all remaining command line arguments. For all arguments that match valid parameter names, overwrite the pair<string,int> with new values, and set the int element to 3 to indicate that these have been defined on the command line.
     // At this stage we have all parameters defined as strings, and a record of where they were defined. No checking of parameter values has occurred yet.
-    
     
     // initialise global object; to contain all file paths, parameter values and data.
     globals globals;
@@ -117,15 +110,15 @@ int main(int argc, const char * argv[])
         globals.outputLog_fileStream.flush();
     }
     
-    // check those parameters set to default values and print to log
+    // check parameters that are set to default values and print to log
     writeToFile("\nParameters taking default values\n", globals.outputLog_on, globals.outputLog_fileStream);
     checkParameters(globals, 0);
     
-    // check those parameters read in from file and print to log
+    // check parameters that are read in from file and print to log
     writeToFile("\nParameters read in from file\n", globals.outputLog_on, globals.outputLog_fileStream);
     checkParameters(globals, 1);
     
-    // check those parameters defined as command line arguments and print to log
+    // check parameters that are defined as command line arguments and print to log
     writeToFile("\nParameters defined on command line\n", globals.outputLog_on, globals.outputLog_fileStream);
     checkParameters(globals, 2);
     coutAndLog("\n", globals.outputLog_on, globals.outputLog_fileStream);
@@ -153,16 +146,13 @@ int main(int argc, const char * argv[])
     
     //---------------------------------------------------------------------------------------------------
     
-    // Perform inference. Loop through defined range of K, deploying various statistical methods.
+    // Loop through defined range of K, deploying various statistical methods.
     
     // initialise objects for storing results
     initialiseGlobals(globals);
     
     // open file streams that are common to all K
     openFileStreams(globals);
-    
-    // open file stream for junk output (comment out as needed)
-    globals.junk_fileStream = safe_ofstream(globals.outputRoot_filePath + "junk.txt", false, globals.outputLog_fileStream);
     
     // loop through range of K
     for (int Kindex=0; Kindex<(globals.Kmax-globals.Kmin+1); Kindex++) {
@@ -192,17 +182,6 @@ int main(int argc, const char * argv[])
         }
         coutAndLog("  complete\n\n", globals.outputLog_on, globals.outputLog_fileStream);
         
-        // EM algorithm
-        if (globals.EMalgorithm_on) {
-            coutAndLog("Running EM algorithm...\n", globals.outputLog_on, globals.outputLog_fileStream);
-            if (!globals.admix_on) {
-                EM_noAdmix(globals, Kindex);
-            } else {
-                EM_admix(globals, Kindex);
-            }
-            coutAndLog("  complete\n\n", globals.outputLog_on, globals.outputLog_fileStream);
-        }
-        
         
         //#### Print results to file
         
@@ -229,18 +208,6 @@ int main(int argc, const char * argv[])
         if (globals.outputEvidenceDetails_on)
             printEvidenceDetails(globals, Kindex);
         
-        // print max-like allele frequencies to file
-        if (globals.outputMaxLike_alleleFreqs_on)
-            printMaxLike_alleleFreqs(globals, Kindex);
-        
-        // print max-like admixture frequencies to file
-        if (globals.outputMaxLike_admixFreqs_on)
-            printMaxLike_admixFreqs(globals, Kindex);
-        
-        // print comparison statistics to file
-        if (globals.outputComparisonStatistics_on)
-            printComparisonStatistics(globals, Kindex);
-        
         //#### Report answers from various estimation methods to console and to log
         
         coutAndLog("Estimates of (log) model evidence...\n\n", globals.outputLog_on, globals.outputLog_fileStream);
@@ -249,52 +216,34 @@ int main(int argc, const char * argv[])
         if (globals.exhaustive_on)
             coutAndLog("Exhaustive\n  exact value: "+process_nan(globals.logEvidence_exhaustive[Kindex])+"\n\n", globals.outputLog_on, globals.outputLog_fileStream);
         
-        // harmonic mean
-        coutAndLog("Harmonic mean", globals.outputLog_on, globals.outputLog_fileStream);
-        coutAndLog(" (estimated from single run)\n", globals.outputLog_on, globals.outputLog_fileStream);
-        coutAndLog("  estimate: "+process_nan(globals.logEvidence_harmonic[Kindex])+"\n", globals.outputLog_on, globals.outputLog_fileStream);
-        coutAndLog("\n", globals.outputLog_on, globals.outputLog_fileStream);
-        
-        // structure estimator
-        coutAndLog("Structure estimator", globals.outputLog_on, globals.outputLog_fileStream);
-        coutAndLog(" (estimated from single run)\n", globals.outputLog_on, globals.outputLog_fileStream);
-        coutAndLog("  estimate: "+process_nan(globals.logEvidence_structure[Kindex])+"\n", globals.outputLog_on, globals.outputLog_fileStream);
-        coutAndLog("\n", globals.outputLog_on, globals.outputLog_fileStream);
-        
         // thermodynamic integral estimator
         coutAndLog("Thermodynamic integral estimator\n", globals.outputLog_on, globals.outputLog_fileStream);
         coutAndLog("  estimate: "+process_nan(globals.logEvidence_TI[Kindex])+"\n", globals.outputLog_on, globals.outputLog_fileStream);
         coutAndLog("  standard error: "+process_nan(globals.logEvidence_TI_SE[Kindex])+"\n\n", globals.outputLog_on, globals.outputLog_fileStream);
         
-        // model comparison statistics
-        if (globals.outputComparisonStatistics_on) {
-            coutAndLog("Model comparison statistics\n", globals.outputLog_on, globals.outputLog_fileStream);
-            coutAndLog("  AIC: "+process_nan(globals.AIC[Kindex])+"\n", globals.outputLog_on, globals.outputLog_fileStream);
-            coutAndLog("  BIC: "+process_nan(globals.BIC[Kindex])+"\n", globals.outputLog_on, globals.outputLog_fileStream);
-            coutAndLog("  DIC_S (Spiegelhalter): "+process_nan(globals.DIC_Spiegelhalter[Kindex])+"\n", globals.outputLog_on, globals.outputLog_fileStream);
-            coutAndLog("  DIC_G (Gelman): "+process_nan(globals.DIC_Gelman[Kindex])+"\n\n", globals.outputLog_on, globals.outputLog_fileStream);
-        }
-
 		fflush(stdout);
         
     } // end loop through K
     
     // print normalised evidence to file
-    if (globals.outputEvidenceNormalised_on)
+    if (globals.outputEvidenceNormalised_on) {
         printEvidenceNormalised(globals);
-    
+    }
     
     // end program
-    double duration = (clock()-start)/double(CLOCKS_PER_SEC);
-    coutAndLog("Program completed in "+to_string((double long)duration)+string(" seconds\n"), globals.outputLog_on, globals.outputLog_fileStream);
+    time(&tend);
+    double duration = difftime(tend, tstart);
+    ostringstream duration_ss;
+    duration_ss << "Program completed in approximately " << duration << " seconds\n";
+    string duration_s = duration_ss.str();
+    if (duration<0) {
+        coutAndLog("Program completed in less than 1 second\n", globals.outputLog_on, globals.outputLog_fileStream);
+    } else {
+        coutAndLog(duration_s, globals.outputLog_on, globals.outputLog_fileStream);
+    }
     coutAndLog("Output written to: "+globals.outputRoot_filePath+string("\n"), globals.outputLog_on, globals.outputLog_fileStream);
     coutAndLog("------------------------------------------\n", globals.outputLog_on, globals.outputLog_fileStream);
-    
-    print(test1);
-    print(test2);
-    double testPercent = test1/double(test2)*100;
-    print(testPercent);
-    
+
     //pauseExit();
     return(0);
 }

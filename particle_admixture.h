@@ -35,10 +35,8 @@ public:
     std::vector<int> J;
     std::vector<int> ploidy_vec;
     double lambda;
-    double beta;
-    
+    double beta_raised;
     double alpha;
-    double alphaPropSD;
     
     // grouping
     std::vector< std::vector< std::vector<int> > > group;
@@ -54,12 +52,6 @@ public:
     std::vector< std::vector<int> > admixCounts;
     std::vector<int> admixCountsTotals;
     std::vector< std::vector<double> > admixFreqs;
-    
-    // scalars for storing current status
-    int thisData;
-    int thisGroup;
-    int thisAlleleCounts;
-    int thisAlleleCountsTotals;
     
     // assignment probabilities
     std::vector<double> logProbVec;
@@ -80,7 +72,7 @@ public:
     
     // constructors
     particle_admixture();
-    particle_admixture(globals &globals, int _K, double _alpha, double _alphaPropSD, double _beta);
+    particle_admixture(globals &globals, int _K, double _alpha, double _beta_raised);
     
     // reset
     void reset(bool reset_Qmatrix_running);
