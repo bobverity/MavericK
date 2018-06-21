@@ -572,18 +572,18 @@ void readData(globals &globals) {
     vector<string> rawEntries_line;
     string line1;
     int row=0;
-    while (safe_getline(globals.data_fileStream, line1))
-    {
-        if (line1.size()==0)
+    while (safe_getline(globals.data_fileStream, line1)) {
+        if (line1.size()==0) {
             continue;
+        }
         row++;
-        if (row==1 && globals.headerRow_on)
+        if (row==1 && globals.headerRow_on) {
             continue;
+        }
         rawEntries_line.clear();
         istringstream ss(line1);
         string line2;
-        while (getline(ss, line2, '\t'))
-        {
+        while (getline(ss, line2, '\t')) {
             string line3 = istringstream(line2).str();
             rawEntries_line.push_back(line3);
         }
@@ -602,9 +602,8 @@ void readData(globals &globals) {
     // check same number of values in each row
     int cols = int(rawEntries[0].size());
     for (int i=0; i<int(rawEntries.size()); i++) {
-        int row = globals.headerRow_on ? i+2 : i+1;
         if (rawEntries[i].size()!=cols) {
-            cerrAndLog("\nError: row "+to_string((long long)row)+string(" in data file does not contain ")+to_string((long long)cols)+string(" entries\n"), globals.outputLog_on, globals.outputLog_fileStream);
+            cerrAndLog("\nError: all rows in data file must have the same number of columns\n", globals.outputLog_on, globals.outputLog_fileStream);
             exit(1);
         }
     }
@@ -628,19 +627,23 @@ void readData(globals &globals) {
     }
     if (globals.popCol_on) {
         pop_startRead = 1;
-        if (ploidy_startRead!=-1)
+        if (ploidy_startRead!=-1) {
             ploidy_startRead++;
+        }
         data_startRead++;
     }
     
     // print these to screen and file
-    if (globals.headerRow_on)
+    if (globals.headerRow_on) {
         coutAndLog("  row 1 = header line\n", globals.outputLog_on, globals.outputLog_fileStream);
+    }
     coutAndLog("  column 1 = individual labels\n", globals.outputLog_on, globals.outputLog_fileStream);
-    if (pop_startRead!=-1)
+    if (pop_startRead!=-1) {
         coutAndLog("  column "+to_string((long long)pop_startRead+1)+" = population of origin\n", globals.outputLog_on, globals.outputLog_fileStream);
-    if (ploidy_startRead!=-1)
+    }
+    if (ploidy_startRead!=-1) {
         coutAndLog("  column "+to_string((long long)ploidy_startRead+1)+" = ploidy\n", globals.outputLog_on, globals.outputLog_fileStream);
+    }
     if (globals.dataFormat==2) {
         coutAndLog("  dataFormat = single line per individual\n", globals.outputLog_on, globals.outputLog_fileStream);
     }
@@ -654,21 +657,24 @@ void readData(globals &globals) {
         for (int j=0; j<int(rawEntries[i].size()); j++) {
             
             // read in individual labels
-            if (j==0)
+            if (j==0) {
                 indLabels_raw.push_back(rawEntries[i][j]);
+            }
             
             // read in population labels
-            if (j==pop_startRead)
+            if (j==pop_startRead) {
                 pop_raw.push_back(rawEntries[i][j]);
+            }
             
             // read in ploidy for each individual
-            if (j==ploidy_startRead)
+            if (j==ploidy_startRead) {
                 ploidy_raw.push_back(rawEntries[i][j]);
+            }
             
             // read in data
-            if (j>=data_startRead)
+            if (j>=data_startRead) {
                 rawData_line.push_back(rawEntries[i][j]);
-            
+            }
         }
         rawData.push_back(rawData_line);
     }
@@ -708,9 +714,11 @@ void readData(globals &globals) {
         
         int startRow = 0;
         for (int i=0; i<int(rawData_copy.size()); i++) {
+            
             // check that sufficient entries given ploidy
             if ( (rawData_copy[i].size()%ploidy_int_copy[i])!=0 ) {
                 cerrAndLog("\nError: number of elements in single-line format not compatible with given ploidy\n", globals.outputLog_on, globals.outputLog_fileStream);
+                exit(1);
             }
             // add to indLabels and pop
             for (int j=0; j<ploidy_int_copy[i]; j++) {

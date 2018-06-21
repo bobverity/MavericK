@@ -94,6 +94,9 @@ public:
     // constructor
     MCMC_noAdmixture(globals &globals, int _Kindex);
     
+    // destructor
+    ~MCMC_noAdmixture();
+    
     // perform MCMC
     void perform_MCMC(globals &globals);
     void MetropolisCoupling();

@@ -176,10 +176,15 @@ int main(int argc, const char * argv[]) {
         // main MCMC (including thermodynamic integration)
         coutAndLog("Carrying out thermodynamic integration...\n", globals.outputLog_on, globals.outputLog_fileStream);
         if (!globals.admix_on) {
+            
             run_MCMC_noAdmixture(globals, Kindex);
+            
         } else {
             run_MCMC_admixture(globals, Kindex);
         }
+        
+        print(K);
+        
         coutAndLog("  complete\n\n", globals.outputLog_on, globals.outputLog_fileStream);
         
         

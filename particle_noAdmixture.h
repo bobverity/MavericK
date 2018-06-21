@@ -67,6 +67,8 @@ public:
     particle_noAdmixture();
     particle_noAdmixture(globals &globals, int _K, double _beta_raised);
     
+    ~particle_noAdmixture();
+    
     // reset
     void reset();
     

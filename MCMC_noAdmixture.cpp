@@ -88,6 +88,8 @@ MCMC_noAdmixture::MCMC_noAdmixture(globals &globals, int _Kindex) {
     
 }
 
+MCMC_noAdmixture::~MCMC_noAdmixture() {}
+
 //------------------------------------------------
 // MCMC_noAdmixture::
 // perform complete MCMC under no-admixture model

@@ -72,6 +72,8 @@ particle_noAdmixture::particle_noAdmixture(globals &globals, int _K, double _bet
     
 }
 
+particle_noAdmixture::~particle_noAdmixture() {}
+
 //------------------------------------------------
 // particle_noAdmixture::
 // reset objects used in MCMC
