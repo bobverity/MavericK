@@ -20,12 +20,15 @@ using namespace std;
 MCMC_admixture::MCMC_admixture(globals &globals, int _Kindex) {
     
     // copy some values over from globals object
+    uniquePop_counts = globals.uniquePop_counts;
+    pop_index = globals.pop_index;
     Kindex = _Kindex;
     K = globals.Kmin+Kindex;
     n = globals.n;
     loci = globals.loci;
     ploidy_vec = globals.ploidy_vec;
     outputQmatrix_pop_on = globals.outputQmatrix_pop_on;
+    fixAlpha_on = globals.fixAlpha_on;
     nPops = int(globals.uniquePops.size());
     burnin = globals.burnin;
     samples = globals.samples;
@@ -97,7 +100,7 @@ MCMC_admixture::MCMC_admixture(globals &globals, int _Kindex) {
 //------------------------------------------------
 // MCMC_admixture::
 // perform complete MCMC under admixture model
-void MCMC_admixture::perform_MCMC(globals &globals) {
+void MCMC_admixture::perform_MCMC() {
     
     // reset chains
     for (int rung=0; rung<rungs; rung++) {
@@ -120,7 +123,7 @@ void MCMC_admixture::perform_MCMC(globals &globals) {
             //particle_vec[rung].group_update_Klevel();
             
             // if alpha not fixed, update by Metropolis step
-            if (globals.fixAlpha_on==0) {
+            if (fixAlpha_on==0) {
                 particle_vec[rung].alpha_update();
             }
             
@@ -167,12 +170,6 @@ void MCMC_admixture::perform_MCMC(globals &globals) {
                     logEvidence_TI_store[rep-burnin] += 0.5*GTI_pow*(w1*loglike1 + w2*loglike2)/double(rungs);
                 }
             }
-        }
-        
-        // write to outputLikelihoods file
-        if (outputLikelihood_on) {
-            globals.outputLikelihood_fileStream << K << "," << 1 << "," << rep-burnin+1 << "," << particle_vec[cold_rung].logLikeGroup << "," << particle_vec[cold_rung].logLikeJoint << "," << particle_vec[cold_rung].alpha << "\n";
-            globals.outputLikelihood_fileStream.flush();
         }
         
     } // end of MCMC
@@ -225,12 +222,12 @@ void MCMC_admixture::perform_MCMC(globals &globals) {
     if (outputQmatrix_pop_on) {
         for (int i=0; i<n; i++) {
             for (int k=0; k<K; k++) {
-                Qmatrix_pop[globals.pop_index[i]][k] += Qmatrix_ind[i][k];
+                Qmatrix_pop[pop_index[i]][k] += Qmatrix_ind[i][k];
             }
         }
         for (int i=0; i<nPops; i++) {
             for (int k=0; k<K; k++) {
-                Qmatrix_pop[i][k] /= double(globals.uniquePop_counts[i]);
+                Qmatrix_pop[i][k] /= double(uniquePop_counts[i]);
             }
         }
     }

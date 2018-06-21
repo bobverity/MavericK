@@ -20,6 +20,8 @@ using namespace std;
 MCMC_noAdmixture::MCMC_noAdmixture(globals &globals, int _Kindex) {
     
     // copy some values over from globals object
+    uniquePop_counts = globals.uniquePop_counts;
+    pop_index = globals.pop_index;
     Kindex = _Kindex;
     K = globals.Kmin+Kindex;
     n = globals.n;
@@ -88,12 +90,10 @@ MCMC_noAdmixture::MCMC_noAdmixture(globals &globals, int _Kindex) {
     
 }
 
-MCMC_noAdmixture::~MCMC_noAdmixture() {}
-
 //------------------------------------------------
 // MCMC_noAdmixture::
 // perform complete MCMC under no-admixture model
-void MCMC_noAdmixture::perform_MCMC(globals &globals) {
+void MCMC_noAdmixture::perform_MCMC() {
     
     // reset chains
     for (int rung=0; rung<rungs; rung++) {
@@ -158,12 +158,6 @@ void MCMC_noAdmixture::perform_MCMC(globals &globals) {
             
         }
         
-        // write to outputLikelihoods file
-        if (outputLikelihood_on) {
-            globals.outputLikelihood_fileStream << K << "," << 1 << "," << rep-burnin+1 << "," << particle_vec[cold_rung].logLikeGroup << "," << particle_vec[cold_rung].logLikeJoint << "\n";
-            globals.outputLikelihood_fileStream.flush();
-        }
-        
     } // end of MCMC
     
     // finish off acceptance rate vector
@@ -200,12 +194,12 @@ void MCMC_noAdmixture::perform_MCMC(globals &globals) {
     if (outputQmatrix_pop_on) {
         for (int i=0; i<n; i++) {
             for (int k=0; k<K; k++) {
-                Qmatrix_pop[globals.pop_index[i]][k] += Qmatrix_ind[i][k];
+                Qmatrix_pop[pop_index[i]][k] += Qmatrix_ind[i][k];
             }
         }
         for (int i=0; i<nPops; i++) {
             for (int k=0; k<K; k++) {
-                Qmatrix_pop[i][k] /= double(globals.uniquePop_counts[i]);
+                Qmatrix_pop[i][k] /= double(uniquePop_counts[i]);
             }
         }
     }

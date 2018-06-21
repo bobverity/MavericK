@@ -32,10 +32,8 @@ void run_MCMC_noAdmixture(globals &globals, int Kindex) {
     }
     
     // perform MCMC
-    print("begin MCMC");
     MCMC_noAdmixture mainMCMC(globals, Kindex);
-    mainMCMC.perform_MCMC(globals);
-    print("end MCMC");
+    mainMCMC.perform_MCMC();
     
     // save Qmatrix values
     for (int i=0; i<globals.n; i++) {
@@ -50,15 +48,13 @@ void run_MCMC_noAdmixture(globals &globals, int Kindex) {
             }
         }
     }
-    print("foo");
+    
     // save TI results to global variable
     globals.TIpoint_mean[Kindex] = mainMCMC.TIpoint_mean;
     globals.TIpoint_var[Kindex] = mainMCMC.TIpoint_var;
     globals.TIpoint_SE[Kindex] = mainMCMC.TIpoint_SE;
     globals.logEvidence_TI[Kindex] = mainMCMC.logEvidence_TI;
     globals.logEvidence_TI_SE[Kindex] = mainMCMC.logEvidence_TI_SE;
-    print("bar");
-    
 }
 
 //------------------------------------------------
@@ -80,7 +76,7 @@ void run_MCMC_admixture(globals &globals, int Kindex) {
     
     // perform MCMC
     MCMC_admixture mainMCMC(globals, Kindex);
-    mainMCMC.perform_MCMC(globals);
+    mainMCMC.perform_MCMC();
     
     // save Qmatrix values
     for (int i=0; i<globals.n; i++) {

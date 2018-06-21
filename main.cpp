@@ -176,14 +176,22 @@ int main(int argc, const char * argv[]) {
         // main MCMC (including thermodynamic integration)
         coutAndLog("Carrying out thermodynamic integration...\n", globals.outputLog_on, globals.outputLog_fileStream);
         if (!globals.admix_on) {
-            
             run_MCMC_noAdmixture(globals, Kindex);
-            
         } else {
             run_MCMC_admixture(globals, Kindex);
         }
         
-        print(K);
+        // write to outputLikelihoods file
+        //if (outputLikelihood_on) {
+        //    globals.outputLikelihood_fileStream << K << "," << 1 << "," << rep-burnin+1 << "," << particle_vec[cold_rung].logLikeGroup << "," << particle_vec[cold_rung].logLikeJoint << "\n";
+        //    globals.outputLikelihood_fileStream.flush();
+        //}
+        
+        // write to outputLikelihoods file
+        //if (outputLikelihood_on) {
+        //    globals.outputLikelihood_fileStream << K << "," << 1 << "," << rep-burnin+1 << "," << particle_vec[cold_rung].logLikeGroup << "," << particle_vec[cold_rung].logLikeJoint << "," << particle_vec[cold_rung].alpha << "\n";
+        //    globals.outputLikelihood_fileStream.flush();
+        //}
         
         coutAndLog("  complete\n\n", globals.outputLog_on, globals.outputLog_fileStream);
         

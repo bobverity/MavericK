@@ -29,6 +29,8 @@ public:
     // PUBLIC OBJECTS
     
     // basic quantities
+    std::vector<int> uniquePop_counts;
+    std::vector<int> pop_index;
     int Kindex;
     int K;
     int n;
@@ -36,6 +38,7 @@ public:
     std::vector<int> ploidy_vec;
     bool outputQmatrix_pop_on;
     bool outputLikelihood_on;
+    bool fixAlpha_on;
     int nPops;
     int burnin;
     int samples;
@@ -98,7 +101,7 @@ public:
     MCMC_admixture(globals &globals, int _Kindex);
     
     // perform MCMC
-    void perform_MCMC(globals &globals);
+    void perform_MCMC();
     void MetropolisCoupling();
     void updateQmatrix(particle_admixture &particle, bool outOfBurnin);
     

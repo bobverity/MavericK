@@ -29,6 +29,8 @@ public:
     // PUBLIC OBJECTS
     
     // basic quantities
+    std::vector<int> uniquePop_counts;
+    std::vector<int> pop_index;
     int Kindex;
     int K;
     int n;
@@ -94,11 +96,8 @@ public:
     // constructor
     MCMC_noAdmixture(globals &globals, int _Kindex);
     
-    // destructor
-    ~MCMC_noAdmixture();
-    
     // perform MCMC
-    void perform_MCMC(globals &globals);
+    void perform_MCMC();
     void MetropolisCoupling();
     void updateQmatrix(particle_noAdmixture &particle, bool outOfBurnin);
 
